@@ -1,0 +1,16 @@
+{
+  "name": "그믐 — 달이 지는 밤의 방들",
+  "short_name": "그믐",
+  "description": "할머니의 유언으로 돌아온 고향 한옥에서 기억의 방들을 열어내는 룸 이스케이프",
+  "lang": "ko",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#04060c",
+  "theme_color": "#0a1020",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
