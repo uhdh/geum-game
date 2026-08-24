@@ -1,69 +1,75 @@
 'use strict';
 ROOMS.ch4 = {
-  title: '제4장 · 사당 — 위패',
+  title: '사당 — 위패',
   onEnter(){
-    Engine.say('사당이다. 조상의 위패가 켜마다 놓여 있고, 맨 아래 칸은 봉인돼 있다.');
+    Engine.say('사당이다. 제물 저울이 놓인 상과, 맨 아래 봉인된 칸.');
     Engine.setHotspots(this.spots());
   },
   onYin(){ Engine.setHotspots(this.spots()); },
   draw(c, t){
     const P = pal();
     drawRoomBase(c);
-    px(P.wood, 60, 34, 200, 10);
+    drawPillar(c, 6, 26, 146);
+    drawPillar(c, 307, 26, 146);
+    px(P.accent, 60, 34, 200, 10);
     px(P.woodDark, 60, 44, 200, 4);
-    const order = G.flags.tabletOrder || ['경오','갑자','임신','병인','무진'];
-    for(let i = 0; i < 5; i++) drawTablet(c, 68 + i * 38, 48, 32, 34, order[i]);
     px(P.wood, 60, 88, 200, 8);
     px(P.woodDark, 60, 96, 200, 4);
     px(P.woodDark, 216, 100, 44, 20);
     px(P.metal2, 234, 106, 8, 8);
     px(P.paper2, 220, 104, 36, 12);
-    px(P.wood, 16, 40, 34, 60);
-    frame(P.woodDark, 16, 40, 34, 60);
-    const els = ['목','화','토','금','수'];
-    const L = G.flags.ohaengLinks || [];
-    const pos = [[33,52],[24,66],[42,66],[24,84],[42,84]];
-    c.strokeStyle = P.metal2;
-    c.lineWidth = 1;
-    L.forEach(l => {
-      c.beginPath();
-      c.moveTo(pos[l[0]][0], pos[l[0]][1]);
-      c.lineTo(pos[l[1]][0], pos[l[1]][1]);
-      c.stroke();
+    px(P.wood, 96, 52, 128, 8);
+    px(P.woodDark, 100, 60, 6, 28); px(P.woodDark, 214, 60, 6, 28);
+    const sp = G.flags.scalePos || {};
+    let sumL = 0, sumR = 0;
+    const WG = { gam:3, ju:2, bam:4, yu:1, san:5 };
+    Object.keys(WG).forEach(k => {
+      if(sp[k] === 'l') sumL += WG[k];
+      if(sp[k] === 'r') sumR += WG[k];
     });
-    els.forEach((e, i) => {
-      px(Engine.flag('p_ohaeng') ? P.glow : P.metal, pos[i][0]-4, pos[i][1]-4, 8, 8);
-      c.fillStyle = P.ink;
-      c.font = '6px monospace';
-      c.textAlign = 'center';
-      c.fillText(e, pos[i][0], pos[i][1]+2);
-      c.textAlign = 'left';
-    });
+    const tilt = Math.max(-0.3, Math.min(0.3, (sumL - sumR) * 0.06));
+    c.save();
+    c.translate(160, 58);
+    c.rotate(tilt);
+    c.strokeStyle = P.wood2;
+    c.lineWidth = 2;
+    c.beginPath(); c.moveTo(-58, 0); c.lineTo(58, 0); c.stroke();
+    c.fillStyle = P.accent;
+    c.fillRect(-62, -4, 5, 5);
+    c.fillRect(57, -4, 5, 5);
+    c.restore();
+    c.fillStyle = P.stone;
+    c.beginPath(); c.moveTo(152, 88); c.lineTo(168, 88); c.lineTo(160, 74); c.fill();
     drawCandle(c, 280, 60, true, t);
     drawCandle(c, 292, 60, true, t + 2);
     px(P.paper, 276, 62, 4, 26);
     px(P.paper, 288, 62, 4, 26);
-    px(P.paper, 130, 100, 24, 10);
+    drawMat(c, 120, 108, 80, 10);
     px(Engine.flag('read_genealogy') ? P.paper2 : P.paper, 130, 100, 24, 10);
     px(P.paper2, 130, 100, 24, 1);
     if(G.yin) drawRabbitHint(c, 286, 96, t);
-    if(Engine.flag('p_tablets') && Engine.flag('p_ohaeng') && !Engine.flag('frag4')){
+    if(Engine.flag('p_scale') && Engine.flag('p_ohaeng') && !Engine.flag('frag4')){
       const a = 0.6 + 0.4 * Math.sin(t * 5);
       c.globalAlpha = a;
       dspr('frag', 152, 20);
       c.globalAlpha = 1;
     }
   },
+  lights(t){
+    return [
+      { x:286, y:58, r:36, col:'rgba(255,190,90,', a:0.18, fl:8 },
+      { x:160, y:56, r:44, col:'rgba(122,224,208,', a:0.07 }
+    ];
+  },
   spots(){
     const s = [];
-    s.push({ x:60, y:34, w:200, h:50, act:() => {
-      if(!Engine.flag('p_tablets')) pzOpen('tablets');
-      else Engine.say('위패가 바른 차례로 놓였다.');
+    s.push({ x:96, y:40, w:128, h:48, act:() => {
+      if(!Engine.flag('p_scale')) pzOpen('scale');
+      else Engine.say('저울은 평온히 균형을 이루고 있다.');
     }});
     s.push({ x:214, y:98, w:48, h:24, act:() => {
-      if(!Engine.flag('p_tablets')){ Engine.say('봉인이 풀리지 않는다. 위패의 차례가 어긋나 있다.'); return; }
+      if(!Engine.flag('p_scale')){ Engine.say('봉인이 풀리지 않는다. 저울의 균형이 필요하다.'); return; }
       if(!Engine.has('diary2')){
-        ITEMS.diary2.text = '달력 20년 9월.\n\n달지기는 아이를 지키는 자가 아니었다.\n아이가 저승으로 건너가는 마지막 길을\n밝히는 자였다.\n\n나는 겁이 났다. 그믐밤이 올 때마다\n제를 지었지만, 조각을 물에 띄우지 못했다.\n이제 나의 시간도 다한다.\n지호야, 사당의 봉인을 열어라.\n너의 이름을 확인하고, 그믐밤에 달집에 나라.';
         Engine.give('diary2');
         openReader('봉인 칸 — 낡은 위패', '위패에는 이렇게 새겨 있다.\n\n「김지호 — 세상을 떠나다\n20년 전 그믐밤」\n\n…내 이름이다.');
         Engine.say('…이건. 내 위패.');
@@ -77,22 +83,16 @@ ROOMS.ch4 = {
     s.push({ x:126, y:96, w:30, h:18, act:() => {
       if(!Engine.flag('read_genealogy')){
         Engine.setFlag('read_genealogy', true);
-        openReader('족보', '달골 김씨 세계.\n\n위패는 간의 차례로 세운다.\n간은 — 갑 · 을 · 병 · 정 · 무 · 기 · 경 · 신 · 임 · 계\n지는 — 자 · 축 · 인 · 묘 · 진 · 사 · 오 · 미 · 신 · 유 · 술 · 해');
-      } else Engine.say('족보: 갑을병정무기경임계 / 자축인묘진사오미신유술해');
+        openReader('족보', '달골 김씨 세계.\n\n제물 저울의 법.\n좌우가 다르면 조상이 노한다.\n넷 이상 올려 균형을 이루어라.\n\n곶감은 셋, 대추는 둘,\n밤은 넷, 유과는 하나, 산자는 다섯.');
+      } else openReader('족보', '「좌우가 다르면 조상이 노한다.\n넷 이상 올려 균형을 이루어라」\n\n곶감 3 · 대추 2 · 밤 4 · 유과 1 · 산자 5');
     }});
-    if(G.yin) s.push({ x:282, y:92, w:26, h:22, act:() => { G.hints++; saveGame(); Sfx.mortar(); hintCh4(); } });
-    if(Engine.flag('p_tablets') && Engine.flag('p_ohaeng') && !Engine.flag('frag4'))
+    s.push({ x:0, y:40, w:14, h:70, act:() => Engine.go('madang') });
+    if(G.yin) s.push({ x:282, y:92, w:26, h:22, act:rabbitTap });
+    if(Engine.flag('p_scale') && Engine.flag('p_ohaeng') && !Engine.flag('frag4'))
       s.push({ x:146, y:16, w:32, h:16, act:() => collectFragment(4) });
     return s;
   }
 };
-function hintCh4(){
-  if(!Engine.flag('read_genealogy')) Engine.say('토끼가 바닥의 족보를 본다.');
-  else if(!Engine.flag('p_tablets')) Engine.say('토끼가 위패를 본다. 간의 순서대로.');
-  else if(!Engine.has('diary2')) Engine.say('토끼가 봉인 칸을 본다. 위패부터.');
-  else if(!Engine.flag('p_ohaeng')) Engine.say('토끼가 벽장치를 본다. 목은 화를 낳고, 화는 토를 낳는다.');
-  else Engine.say('토끼가 사당 천장을 본다.');
-}
 ROOMS.ch5 = {
   title: '제5장 · 우물 — 두 세계의 빛',
   onEnter(){
@@ -128,6 +128,7 @@ ROOMS.ch5 = {
       const glow = STONE_YANG.includes(i) ? !G.yin : G.yin;
       drawStone(c, sx, sy, glow && !Engine.flag('p_stones'), t + i * 2);
     });
+    for(let i = 0; i < 7; i++) drawReed(c, 14 + i * 44, 112, t + i);
     drawRabbitHint(c, 226, 84, t);
     px(P.stone, 288, 70, 18, 26);
     px(P.glow, 292, 76, 10, 10);
@@ -137,6 +138,12 @@ ROOMS.ch5 = {
       dspr('frag', 148, 48);
       c.globalAlpha = 1;
     }
+  },
+  lights(t){
+    return [
+      { x:261, y:35, r:60, col:'rgba(207,232,224,', a:0.22 },
+      { x:157, y:96, r:30, col:'rgba(122,224,208,', a:0.12, fl:3 }
+    ];
   },
   spots(){
     const s = [];
@@ -224,9 +231,18 @@ ROOMS.ch6 = {
         c.globalAlpha = 1;
       }
     }
+    drawLantern(c, 88, 66, t);
+    drawLantern(c, 232, 66, t);
     drawRabbitHint(c, 40, 96, t);
     px(P.paper, 250, 92, 30, 20);
     px(P.paper2, 250, 92, 30, 2);
+  },
+  lights(t){
+    return [
+      { x:157, y:38, r:64, col:'rgba(232,224,192,', a:0.22 },
+      { x:88, y:66, r:30, col:'rgba(255,180,80,', a:0.16, fl:8 },
+      { x:232, y:66, r:30, col:'rgba(255,180,80,', a:0.16, fl:6 }
+    ];
   },
   spots(){
     const s = [];

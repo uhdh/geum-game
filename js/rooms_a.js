@@ -63,6 +63,58 @@ function drawClock(c, x, y, t){
   c.fillStyle = P.accent;
   c.fillRect(x + 15, y + 15, 2, 2);
 }
+function drawPillar(c, x, y0, y1){
+  const P = pal();
+  px(P.wood, x, y0, 7, y1 - y0);
+  px(P.wood2, x, y0, 2, y1 - y0);
+  px(P.woodDark, x + 6, y0, 1, y1 - y0);
+  px(P.woodDark, x - 1, y0, 9, 3);
+  px(P.woodDark, x - 1, y1 - 3, 9, 3);
+}
+function drawLantern(c, x, y, t){
+  const P = pal();
+  const sw = Math.sin(t * 1.8 + x) * 1.5;
+  px(P.woodDark, x - 1, y - 14, 2, 10);
+  c.fillStyle = P.accent;
+  c.fillRect(x - 5 + sw, y - 4, 10, 12);
+  c.fillStyle = P.flame;
+  c.fillRect(x - 3 + sw, y - 2, 6, 8);
+  const f = Math.sin(t * 9 + x) > 0 ? 1 : 0;
+  c.fillStyle = P.paper;
+  c.fillRect(x - 1 + sw, y - 1 + f, 2, 3);
+  c.fillStyle = P.woodDark;
+  c.fillRect(x - 5 + sw, y + 8, 10, 2);
+}
+function drawMat(c, x, y, w, h){
+  const P = pal();
+  px(P.cloth, x, y, w, h);
+  frame(P.woodDark, x, y, w, h);
+  for(let i = 6; i < w - 4; i += 8){
+    px(P.wood2, x + i, y + 2, 2, h - 4);
+  }
+}
+function drawFrameArt(c, x, y, w, h, kind){
+  const P = pal();
+  px(P.woodDark, x - 2, y - 2, w + 4, h + 4);
+  px(P.paper, x, y, w, h);
+  if(kind === 0){
+    px(P.green, x + 3, y + h - 7, w - 6, 4);
+    px(P.metal2, x + w / 2, y + 4, 2, h - 12);
+    px(P.accent, x + w / 2 - 1, y + 5, 4, 2);
+  } else {
+    px(P.ink, x + 4, y + 4, 2, h - 8);
+    px(P.ink, x + 8, y + 6, 8, 2);
+    px(P.ink, x + 8, y + 11, 6, 2);
+    px(P.accent, x + w - 8, y + h - 8, 3, 3);
+  }
+}
+function drawReed(c, x, y, t){
+  const P = pal();
+  const sway = Math.sin(t * 1.6 + x * 0.3) * 2;
+  px(P.green, x, y - 10, 1, 10);
+  px(P.green, x + sway, y - 14, 1, 5);
+  px(P.paper2, x - 1 + sway, y - 16, 3, 3);
+}
 const ROOMS = {};
 ROOMS.madang = {
   title: '달골 — 할머니의 댁',
@@ -131,7 +183,26 @@ ROOMS.madang = {
       c.drawImage(bake('frag'), d.x + 18, 16, 8, 8);
       c.globalAlpha = 1;
     });
+    px(P.woodDark, 0, 58, W, 2);
+    for(let gx = 8; gx < W; gx += 26){
+      px(P.stone2, gx, 104, 3, 6);
+      px(P.green, gx + 14 + Math.sin(t + gx) * 1, 104, 2, 5);
+    }
+    px(P.wood2, 296, 40, 4, 70);
+    c.fillStyle = P.green;
+    c.beginPath(); c.arc(298, 36, 14, 0, 7); c.fill();
+    c.fillStyle = P.wood2;
+    c.beginPath(); c.arc(290, 30, 9, 0, 7); c.fill();
+    drawLantern(c, 22, 66, t);
+    drawLantern(c, 282, 66, t);
     if(G.yin) drawRabbitHint(c, 288, 92, t);
+  },
+  lights(t){
+    return [
+      { x:272, y:34, r:46, col:'rgba(232,224,192,', a:0.16 },
+      { x:22, y:66, r:34, col:'rgba(255,180,80,', a:0.20, fl:8 },
+      { x:282, y:66, r:34, col:'rgba(255,180,80,', a:0.20, fl:7 }
+    ];
   },
   spots(){
     const s = [];
@@ -188,6 +259,10 @@ ROOMS.ch1 = {
       c.drawImage(bake('flint'), 268, 66, 12, 12);
       c.globalAlpha = 1;
     }
+    drawPillar(c, 6, 26, 146);
+    drawPillar(c, 307, 26, 146);
+    drawFrameArt(c, 210, 26, 26, 18, 0);
+    drawMat(c, 140, 108, 60, 10);
     if(G.yin) drawRabbitHint(c, 284, 98, t);
     if(Engine.flag('p_clock') && Engine.flag('p_lock') && !Engine.flag('frag1')){
       const a = 0.6 + 0.4 * Math.sin(t * 5);
@@ -195,6 +270,13 @@ ROOMS.ch1 = {
       dspr('frag', 234, 32);
       c.globalAlpha = 1;
     }
+  },
+  lights(t){
+    const L = [
+      { x:120, y:44, r:40, col:'rgba(255,190,90,', a:0.16, fl:9 },
+      { x:284, y:52, r:52, col:'rgba(180,220,255,', a:G.yin ? 0.05 : 0.12 }
+    ];
+    return L;
   },
   spots(){
     const s = [];
@@ -277,6 +359,8 @@ ROOMS.ch2 = {
     px('#8a5a6a', 106, 50, 40, 3);
     px(P.green, 84, 26, 4, 62);
     px(P.green, 96, 26, 3, 62);
+    drawFrameArt(c, 168, 30, 22, 28, 1);
+    drawMat(c, 138, 110, 48, 8);
     if(G.yin){
       const sh = 'rgba(3,6,12,0.85)';
       c.fillStyle = sh;
@@ -294,6 +378,12 @@ ROOMS.ch2 = {
       dspr('frag', 266, 34);
       c.globalAlpha = 1;
     }
+  },
+  lights(t){
+    return [
+      { x:200, y:74, r:38, col:'rgba(255,190,90,', a:0.17, fl:6 },
+      { x:179, y:44, r:26, col:'rgba(232,224,192,', a:0.08 }
+    ];
   },
   spots(){
     const s = [];
@@ -383,6 +473,12 @@ ROOMS.ch3 = {
       px(P.accent, 92 + (i % 3) * 8, 28 + Math.floor(i / 3) * 9 + Math.sin(t * 1.5 + i) * 1.5, 4, 5);
       px(P.wood2, 94 + (i % 3) * 8, 26 + Math.floor(i / 3) * 9, 1, 4);
     }
+    for(let i = 0; i < 3; i++){
+      px(P.metal2, 60 + i * 14, 28, 1, 8 + i * 2);
+      px(P.metal, 56 + i * 14, 36 + i * 2, 9, 6);
+      px(P.ink, 58 + i * 14, 40 + i * 2, 5, 2);
+    }
+    drawMat(c, 130, 110, 80, 8);
     if(G.yin) drawRabbitHint(c, 286, 96, t);
     if(Engine.flag('p_fire') && Engine.flag('p_jesa') && !Engine.flag('frag3')){
       const a = 0.6 + 0.4 * Math.sin(t * 5);
@@ -390,6 +486,13 @@ ROOMS.ch3 = {
       dspr('frag', 38, 44);
       c.globalAlpha = 1;
     }
+  },
+  lights(t){
+    const big = Engine.flag('p_fire');
+    return [
+      { x:42, y:88, r:big ? 60 : 26, col:'rgba(255,150,60,', a:big ? 0.26 : 0.10, fl:big ? 11 : 5 },
+      { x:160, y:54, r:34, col:'rgba(255,200,120,', a:0.12, fl:7 }
+    ];
   },
   spots(){
     const s = [];

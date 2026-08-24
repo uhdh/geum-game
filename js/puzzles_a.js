@@ -22,6 +22,8 @@ function pzClose(){
 function pzSolved(pid, msg){
   Engine.setFlag('p_' + pid, true);
   Sfx.unlock();
+  Engine.burst(160, 80, '#ffd166', 16);
+  Engine.shake(2.5);
   pzClose();
   if(msg) toast(msg);
   onPuzzleSolved(pid);

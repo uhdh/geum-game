@@ -93,12 +93,30 @@ const Engine = {
       if(h.when && !h.when()) continue;
       if(p.x >= h.x && p.x < h.x + h.w && p.y >= h.y && p.y < h.y + h.h){
         Sfx.click();
+        this.ripple(p.x, p.y);
         h.act();
         return;
       }
     }
   },
   setHotspots(list){ this.hotspots = list; this.sparkleT = 2.6; },
+  shake(m){ this._shake = Math.max(this._shake || 0, m); },
+  burst(x, y, col, n){
+    if(!this.boom) this.boom = [];
+    for(let i = 0; i < (n || 14); i++){
+      const a = Math.random() * Math.PI * 2;
+      const sp = 20 + Math.random() * 60;
+      this.boom.push({
+        x:x, y:y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp - 30,
+        life:0.7 + Math.random()*0.5, t:0,
+        c: col || pal().glow, s: 1 + (Math.random() < 0.3 ? 1 : 0)
+      });
+    }
+  },
+  ripple(x, y){
+    if(!this.rings) this.rings = [];
+    this.rings.push({ x:x, y:y, t:0 });
+  },
   initAmbient(){
     this.dust = [];
     for(let i = 0; i < 26; i++){
@@ -151,6 +169,8 @@ const Engine = {
       G.yin = !G.yin;
       bakeCacheClear();
       if(G.yin) Sfx.yinShift(); else Sfx.yangShift();
+      this.shake(4);
+      this.burst(160, 90, G.yin ? '#7ae0d0' : '#e8d8a0', 12);
       const fl = document.getElementById('flash');
       fl.style.opacity = 0.5;
       setTimeout(() => fl.style.opacity = 0, 130);
@@ -185,9 +205,28 @@ const Engine = {
   render(){
     const c = this.ctx;
     const P = pal();
+    c.save();
+    if(this._shake > 0.2){
+      c.translate((Math.random() - 0.5) * this._shake, (Math.random() - 0.5) * this._shake);
+      this._shake *= 0.86;
+    } else this._shake = 0;
     c.fillStyle = P.bg;
-    c.fillRect(0, 0, W, H);
+    c.fillRect(-4, -4, W + 8, H + 8);
     ROOMS[this.room].draw(c, this.T);
+    if(ROOMS[this.room].lights){
+      const Ls = ROOMS[this.room].lights(this.T);
+      c.globalCompositeOperation = 'lighter';
+      for(let i = 0; i < Ls.length; i++){
+        const L = Ls[i];
+        const fl = L.fl ? (0.82 + 0.18 * Math.sin(this.T * L.fl + i * 2.7)) : 1;
+        const g = c.createRadialGradient(L.x, L.y, 2, L.x, L.y, L.r);
+        g.addColorStop(0, L.col + (L.a * fl).toFixed(3) + ')');
+        g.addColorStop(1, L.col + '0)');
+        c.fillStyle = g;
+        c.fillRect(L.x - L.r, L.y - L.r, L.r * 2, L.r * 2);
+      }
+      c.globalCompositeOperation = 'source-over';
+    }
     if(this.dust && this.dust.length){
       for(let i = 0; i < this.dust.length; i++){
         const d = this.dust[i];
@@ -198,6 +237,33 @@ const Engine = {
         c.globalAlpha = tw;
         c.fillStyle = G.yin ? '#7ae0d0' : '#e8d8a0';
         c.fillRect(d.x | 0, d.y | 0, 1, 1);
+      }
+      c.globalAlpha = 1;
+    }
+    if(this.boom && this.boom.length){
+      for(let i = this.boom.length - 1; i >= 0; i--){
+        const b = this.boom[i];
+        b.t += 0.016;
+        if(b.t >= b.life){ this.boom.splice(i, 1); continue; }
+        b.x += b.vx * 0.016; b.y += b.vy * 0.016;
+        b.vy += 60 * 0.016;
+        c.globalAlpha = 1 - b.t / b.life;
+        c.fillStyle = b.c;
+        c.fillRect(b.x | 0, b.y | 0, b.s, b.s);
+      }
+      c.globalAlpha = 1;
+    }
+    if(this.rings && this.rings.length){
+      for(let i = this.rings.length - 1; i >= 0; i--){
+        const r = this.rings[i];
+        r.t += 0.016;
+        if(r.t > 0.4){ this.rings.splice(i, 1); continue; }
+        c.globalAlpha = (1 - r.t / 0.4) * 0.5;
+        c.strokeStyle = P.glow;
+        c.lineWidth = 1;
+        c.beginPath();
+        c.arc(r.x, r.y, 3 + r.t * 40, 0, 7);
+        c.stroke();
       }
       c.globalAlpha = 1;
     }
@@ -218,7 +284,6 @@ const Engine = {
         if(h.when && !h.when()) return;
         if(h.hidden) return;
         const x = h.x + h.w/2, y = h.y + h.h/2;
-        const s2 = 1 + Math.sin(this.T * 6) * 0.5;
         c.fillStyle = P.glow;
         c.fillRect(x-1, y-3, 2, 2); c.fillRect(x-1, y+1, 2, 2);
         c.fillRect(x-3, y-1, 2, 2); c.fillRect(x+1, y-1, 2, 2);
@@ -238,6 +303,7 @@ const Engine = {
       c.fillRect(0, 0, W, H);
       c.globalAlpha = 1;
     }
+    c.restore();
   }
 };
 function bakeCacheClear(){ for(const k in bakeCache) delete bakeCache[k]; }

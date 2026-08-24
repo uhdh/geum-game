@@ -22,6 +22,9 @@ function collectFragment(n){
   G.fragments = fragCount();
   drawMoonUI();
   Sfx.fragment();
+  Engine.shake(5);
+  Engine.burst(160, 80, '#ffd166', 22);
+  Engine.burst(160, 80, '#7ae0d0', 10);
   toast('그믐조각 ' + n + ' 을(를) 얻었다 (' + G.fragments + '/5)');
   saveGame();
   if(ROOMS[Engine.room]) Engine.setHotspots(ROOMS[Engine.room].spots());
@@ -188,28 +191,72 @@ function drawTitle(){
   const cv2 = document.getElementById('titlecv');
   const c2 = cv2.getContext('2d');
   c2.imageSmoothingEnabled = false;
-  c2.fillStyle = '#04060e';
+  const t = Date.now() / 1000;
+  const g = c2.createLinearGradient(0, 0, 0, 180);
+  g.addColorStop(0, '#04060e');
+  g.addColorStop(0.65, '#0a1020');
+  g.addColorStop(1, '#02040a');
+  c2.fillStyle = g;
   c2.fillRect(0, 0, 320, 180);
-  for(let i = 0; i < 60; i++){
-    c2.fillStyle = i % 3 ? '#3a4a6a' : '#8a9ab8';
-    c2.fillRect((i * 67) % 320, (i * 43) % 130, 1, 1);
+  for(let i = 0; i < 70; i++){
+    const tw = 0.3 + 0.7 * Math.abs(Math.sin(t * (0.4 + (i % 5) * 0.2) + i * 1.7));
+    c2.globalAlpha = tw * 0.8;
+    c2.fillStyle = i % 4 ? '#3a4a6a' : '#8a9ab8';
+    c2.fillRect((i * 67 + 13) % 320, (i * 43 + 7) % 120, 1, 1);
   }
+  c2.globalAlpha = 1;
+  const mg = c2.createRadialGradient(230, 58, 20, 230, 58, 70);
+  mg.addColorStop(0, 'rgba(207,232,224,0.25)');
+  mg.addColorStop(1, 'rgba(207,232,224,0)');
+  c2.fillStyle = mg;
+  c2.fillRect(160, 0, 160, 130);
   c2.fillStyle = '#cfe8e0';
-  c2.beginPath(); c2.arc(230, 60, 34, 0, 7); c2.fill();
-  c2.fillStyle = '#04060e';
-  c2.beginPath(); c2.arc(216, 52, 30, 0, 7); c2.fill();
-  c2.fillStyle = '#0a1220';
-  c2.fillRect(0, 130, 320, 50);
+  c2.beginPath(); c2.arc(230, 58, 34, 0, 7); c2.fill();
+  c2.fillStyle = '#b8d4c8';
+  c2.beginPath(); c2.arc(222, 48, 5, 0, 7); c2.fill();
+  c2.beginPath(); c2.arc(240, 66, 4, 0, 7); c2.fill();
+  c2.beginPath(); c2.arc(228, 70, 3, 0, 7); c2.fill();
+  c2.fillStyle = '#0a1020';
+  c2.beginPath(); c2.arc(214, 50, 30, 0, 7); c2.fill();
+  for(let i = 0; i < 3; i++){
+    const cx = ((t * (4 + i * 3) + i * 140) % 460) - 70;
+    const cy = 40 + i * 22;
+    c2.globalAlpha = 0.16;
+    c2.fillStyle = '#8a9ab8';
+    c2.beginPath(); c2.ellipse(cx, cy, 52, 7 + i * 2, 0, 0, 7); c2.fill();
+    c2.globalAlpha = 1;
+  }
   c2.fillStyle = '#060a14';
-  c2.fillRect(40, 96, 90, 44);
-  c2.beginPath(); c2.moveTo(30, 96); c2.lineTo(85, 70); c2.lineTo(140, 96); c2.fill();
+  c2.fillRect(0, 128, 320, 52);
+  c2.beginPath(); c2.moveTo(0, 128);
+  for(let x = 0; x <= 320; x += 16){
+    c2.lineTo(x, 128 + Math.sin(x * 0.05 + 2) * 4);
+  }
+  c2.lineTo(320, 180); c2.lineTo(0, 180); c2.fill();
+  c2.fillStyle = '#0a0e18';
+  c2.beginPath(); c2.moveTo(24, 130); c2.lineTo(84, 96); c2.lineTo(146, 130); c2.fill();
+  c2.fillStyle = '#04060c';
+  c2.fillRect(44, 112, 82, 40);
+  c2.fillStyle = '#060a14';
+  c2.beginPath(); c2.moveTo(36, 112); c2.lineTo(85, 88); c2.lineTo(136, 112); c2.fill();
+  const win = 0.5 + 0.4 * Math.sin(t * 1.3);
+  c2.globalAlpha = win;
   c2.fillStyle = '#e8d8a0';
-  c2.fillRect(58, 110, 8, 10);
+  c2.fillRect(58, 122, 9, 11);
+  c2.globalAlpha = 1;
   c2.fillStyle = '#1a2a4a';
-  c2.fillRect(160, 150, 60, 4);
-  c2.fillStyle = '#7ae0d0';
-  c2.globalAlpha = 0.5 + 0.3 * Math.sin(Date.now() / 400);
-  c2.fillRect(184, 146, 8, 3);
+  c2.fillRect(160, 152, 60, 4);
+  for(let i = 0; i < 5; i++){
+    const fx = 150 + Math.sin(t * 0.7 + i * 2.2) * 40 + i * 12;
+    const fy = 140 + Math.sin(t * 1.1 + i * 1.3) * 14 + i * 3;
+    c2.globalAlpha = 0.35 + 0.35 * Math.sin(t * 3 + i * 2);
+    c2.fillStyle = '#7ae0d0';
+    c2.fillRect(fx, fy, 2, 2);
+  }
+  c2.globalAlpha = 0.10;
+  c2.fillStyle = '#8a9ab8';
+  c2.fillRect(0, 120 + Math.sin(t * 0.5) * 6, 320, 26);
+  c2.fillRect(0, 148 + Math.cos(t * 0.4) * 5, 320, 20);
   c2.globalAlpha = 1;
 }
 function bindUI(){
@@ -307,7 +354,7 @@ function boot(){
   drawMoonUI();
   titleTimer = setInterval(() => {
     if(!document.getElementById('screen-title').classList.contains('hidden')) drawTitle();
-  }, 500);
+  }, 90);
   drawTitle();
 }
 boot();
