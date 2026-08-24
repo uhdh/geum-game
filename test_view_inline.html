@@ -1,3 +1,18 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="그믐"/>
+<meta name="theme-color" content="#0a1020"/>
+<title>그믐 — 달이 지는 밤의 방들</title>
+<link rel="manifest" href="manifest.json"/>
+<link rel="icon" type="image/png" href="icon-192.png"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<style>
 ﻿@font-face{font-family:'DungGeunMo';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/DungGeunMo.woff') format('woff');font-display:swap}
 :root{--s:1;--ink:#e8dcc0;--ink-dim:#a89468;--gold:#c9a050;--gold-dim:#8a6c34;--paper:#e3d6b0;--paper2:#d3c298;--paper-ink:#3a2c18;--panel:#0d1120;--panel2:#080b16;--line:#3a3020;--teal:#7ae0d0}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -20,7 +35,7 @@ canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges}
 #textbar{position:absolute;left:calc(6px*var(--s));right:calc(6px*var(--s));bottom:calc(38px*var(--s));min-height:calc(34px*var(--s));padding:calc(6px*var(--s)) calc(10px*var(--s));background:linear-gradient(175deg,var(--paper),var(--paper2));color:var(--paper-ink);border:1px solid #7a6236;outline:calc(2px*var(--s)) solid rgba(6,8,16,.85);box-shadow:inset 0 0 calc(14px*var(--s)) rgba(122,98,54,.35),0 calc(4px*var(--s)) calc(14px*var(--s)) rgba(0,0,0,.6);font-size:calc(12px*var(--s));line-height:1.6;z-index:6;display:none}
 #textbar.on{display:block}
 #textbar::before{content:'';position:absolute;left:calc(4px*var(--s));top:calc(3px*var(--s));right:calc(4px*var(--s));bottom:calc(3px*var(--s));border:1px solid rgba(122,98,54,.4);pointer-events:none}
-#msg::after{content:'\258D';animation:blink 1s steps(1) infinite;color:#8a6c34}
+#msg::after{content:'??;animation:blink 1s steps(1) infinite;color:#8a6c34}
 @keyframes blink{50%{opacity:0}}
 
 /* ---------- inventory ---------- */
@@ -33,24 +48,24 @@ canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges}
 
 /* ---------- puzzle modal ---------- */
 #puzzle-layer{--pz:min(var(--s),2);position:absolute;inset:0;background:rgba(2,4,10,.88);z-index:20;display:flex;align-items:center;justify-content:center}
-.pz{width:94%;max-height:94%;overflow-y:auto;max-width:calc(460px*var(--pz));position:relative;background:linear-gradient(180deg,#101628,#0a0e1a 60%,#080b14);border:1px solid var(--gold-dim);outline:calc(3px*var(--s)) solid #05070e;padding:calc(10px*var(--pz)) calc(12px*var(--pz)) calc(10px*var(--pz));font-size:calc(12px*var(--pz));box-shadow:0 calc(12px*var(--s)) calc(50px*var(--s)) rgba(0,0,0,.9),inset 0 0 calc(50px*var(--s)) rgba(0,0,0,.55),inset 0 0 calc(4px*var(--s)) rgba(201,160,80,.15)}
+.pz{width:94%;max-height:94%;overflow-y:auto;max-width:calc(460px*var(--pz));position:relative;background:linear-gradient(180deg,#101628,#0a0e1a 60%,#080b14);border:1px solid var(--gold-dim);outline:calc(3px*var(--s)) solid #05070e;padding:calc(14px*var(--pz)) calc(14px*var(--pz)) calc(12px*var(--pz));font-size:calc(12px*var(--pz));box-shadow:0 calc(12px*var(--s)) calc(50px*var(--s)) rgba(0,0,0,.9),inset 0 0 calc(50px*var(--s)) rgba(0,0,0,.55),inset 0 0 calc(4px*var(--s)) rgba(201,160,80,.15)}
 .pz::before,.pz::after{content:'';position:absolute;width:calc(8px*var(--pz));height:calc(8px*var(--pz));border:1px solid var(--gold);pointer-events:none}
 .pz::before{left:calc(4px*var(--pz));top:calc(4px*var(--pz));border-right:none;border-bottom:none}
 .pz::after{right:calc(4px*var(--pz));bottom:calc(4px*var(--pz));border-left:none;border-top:none}
 .pz.shake{animation:pzShake .4s}
 @keyframes pzShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
-.pz h3{color:var(--gold);font-size:calc(14px*var(--pz));margin-bottom:calc(6px*var(--pz));text-align:center;letter-spacing:calc(3px*var(--s));text-shadow:0 calc(2px*var(--s)) 0 #000}
-.pz h3::before{content:'\25C6 ';color:var(--gold-dim)}
-.pz h3::after{content:' \25C6';color:var(--gold-dim)}
-.pz .desc{color:#9aa8b8;font-size:calc(11px*var(--pz));line-height:1.6;margin-bottom:calc(5px*var(--pz))}
-.pz .row{display:flex;justify-content:center;align-items:center;gap:calc(8px*var(--pz));margin:calc(5px*var(--pz)) 0;flex-wrap:wrap}
+.pz h3{color:var(--gold);font-size:calc(14px*var(--pz));margin-bottom:calc(10px*var(--pz));text-align:center;letter-spacing:calc(3px*var(--s));text-shadow:0 calc(2px*var(--s)) 0 #000}
+.pz h3::before{content:'??';color:var(--gold-dim)}
+.pz h3::after{content:' ??;color:var(--gold-dim)}
+.pz .desc{color:#9aa8b8;font-size:calc(11px*var(--pz));line-height:1.7;margin-bottom:calc(8px*var(--pz))}
+.pz .row{display:flex;justify-content:center;align-items:center;gap:calc(8px*var(--pz));margin:calc(8px*var(--pz)) 0;flex-wrap:wrap}
 .pz button{font-family:inherit;background:linear-gradient(180deg,#241c10,#141008);border:1px solid var(--gold-dim);color:var(--ink);padding:calc(6px*var(--pz)) calc(12px*var(--pz));font-size:calc(11px*var(--pz));cursor:pointer;letter-spacing:1px;box-shadow:0 calc(2px*var(--pz)) 0 #000}
 .pz button:hover{border-color:var(--gold);color:#fff}
 .pz button:active{transform:translateY(calc(1px*var(--s)));box-shadow:none}
-.pz .cell{width:calc(44px*var(--pz));height:calc(40px*var(--pz));border:1px solid #3a3220;background:linear-gradient(180deg,#0c101c,#080b12);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:calc(11px*var(--pz));color:var(--ink);cursor:pointer;text-align:center;line-height:1.3;box-shadow:inset 0 calc(2px*var(--pz)) calc(6px*var(--pz)) rgba(0,0,0,.6)}
+.pz .cell{width:calc(44px*var(--pz));height:calc(44px*var(--pz));border:1px solid #3a3220;background:linear-gradient(180deg,#0c101c,#080b12);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:calc(11px*var(--pz));color:var(--ink);cursor:pointer;text-align:center;line-height:1.3;box-shadow:inset 0 calc(2px*var(--pz)) calc(6px*var(--pz)) rgba(0,0,0,.6)}
 .pz .cell.sel{border-color:var(--teal);box-shadow:0 0 calc(8px*var(--pz)) rgba(122,224,208,.4)}
 .pz .cell small{color:#5a6a80;font-size:calc(10px*var(--pz))}
-.pz canvas{display:block;margin:0 auto;image-rendering:pixelated}.pz .actions{display:flex;gap:calc(10px*var(--pz));justify-content:center;margin-top:calc(8px*var(--pz));flex-wrap:wrap}
+.pz .actions{display:flex;gap:calc(10px*var(--pz));justify-content:center;margin-top:calc(12px*var(--pz));flex-wrap:wrap}
 .beat-dot{width:calc(10px*var(--pz));height:calc(10px*var(--pz));border:1px solid #3a3220;background:#0a0e18}
 .beat-dot.cur{border-color:var(--gold)}
 .beat-dot.on{background:var(--teal);box-shadow:0 0 calc(6px*var(--pz)) rgba(122,224,208,.6)}
@@ -92,3 +107,115 @@ canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges}
 #menu-panel h3{color:#e8e0c8;letter-spacing:calc(10px*var(--s));margin-bottom:calc(10px*var(--s));font-size:calc(18px*var(--s))}
 .hidden{display:none !important}
 
+
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="stage">
+    <canvas id="game" width="320" height="180"></canvas>
+    <div id="flash"></div>
+    <div id="hud"><canvas id="mooncv" width="26" height="26"></canvas><span id="chapname"></span><button id="btn-menu">메뉴</button></div>
+    <div id="textbar"><span id="msg"></span></div>
+    <div id="invbar"><div id="inv"></div></div>
+    <div id="puzzle-layer" class="hidden"></div>
+    <div id="reader" class="hidden"><div id="reader-panel"><h3 id="reader-title"></h3><div id="reader-body"></div><button id="reader-close">닫기</button></div></div>
+    <div id="toast"></div>
+  </div>
+  <div id="screen-title" class="screen">
+    <canvas id="titlecv" width="320" height="180"></canvas>
+    <div class="title-ui">
+      <h1>그믐</h1>
+      <p class="sub">달이 지는 밤의 방들</p>
+      <button id="btn-new" class="mbtn">처음부터</button>
+      <button id="btn-continue" class="mbtn hidden">이어하기</button>
+      <div id="ending-note"></div>
+    </div>
+  </div>
+  <div id="screen-intro" class="screen hidden"><div id="intro-text"></div><button id="btn-intro-next">다음</button></div>
+  <div id="screen-card" class="screen hidden"><div id="card-ch"></div><div id="card-title"></div></div>
+  <div id="screen-ending" class="screen hidden"><canvas id="endcv" width="320" height="180"></canvas><div id="end-text"></div><button id="btn-end-title" class="mbtn">표제로</button></div>
+  <div id="menu-overlay" class="hidden">
+    <div id="menu-panel">
+      <h3>그믐</h3>
+      <button id="btn-resume" class="mbtn">계속하기</button>
+      <button id="btn-sound" class="mbtn">소리: 켬</button>
+      <button id="btn-help" class="mbtn">조작법</button>
+      <button id="btn-reset" class="mbtn danger">처음부터 다시</button>
+    </div>
+  </div>
+</div>
+<script>window._errs=[];window.onerror=function(m,s,l,c){window._errs.push(m+" @"+l+":"+c);return false;};</script>
+<script src="js/palette.js"></script>
+<script src="js/sprites_a.js"></script>
+<script src="js/sprites_b.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/puzzles_a.js"></script>
+<script src="js/puzzles_b.js"></script>
+<script src="js/puzzles_c.js"></script>
+<script src="js/puzzles_d.js"></script>
+<script src="js/rooms_a.js"></script>
+<script src="js/rooms_b.js"></script>
+<script src="js/main.js"></script>
+<script>document.getElementById("screen-title").classList.add("hidden");wipeSave(); Sfx.on=false;Engine.go("ch3"); Engine.fade=0; Engine.fadeDir=0; G.flags.read_recipe=true; pzOpen("jesa");</script><script>document.title=JSON.stringify(window._errs);</script><script>
+const hud = document.getElementById('hud');
+const pl = document.getElementById('puzzle-layer');
+const st = document.getElementById('stage');
+const cs = getComputedStyle(document.documentElement);
+document.title = JSON.stringify({
+  s: cs.getPropertyValue('--s'),
+  stageW: st.style.width,
+  hudW: hud.offsetWidth,
+  hudH: hud.offsetHeight,
+  hudPos: getComputedStyle(hud).position,
+  plDisplay: getComputedStyle(pl).display,
+  plW: pl.offsetWidth,
+  plH: pl.offsetHeight,
+  plZ: getComputedStyle(pl).zIndex,
+  plBg: getComputedStyle(pl).backgroundColor,
+  innerW: window.innerWidth,
+  innerH: window.innerHeight
+});
+</script><script>
+const out = [];
+for(const ss of document.styleSheets){
+  try{
+    const rules = ss.cssRules;
+    out.push('rules:' + rules.length);
+    const names = [];
+    for(const r of rules){
+      if(r.selectorText && /#hud|#puzzle-layer|\.pz\b|\.hidden|#textbar|#reader-panel/.test(r.selectorText)){
+        names.push(r.selectorText);
+      }
+    }
+    out.push(names.join(' | '));
+  }catch(e){ out.push('ERR ' + e.message); }
+}
+document.title = out.join(' ::: ');
+</script><script>
+(function(){
+  const out = [];
+  out.push('sheets:' + document.styleSheets.length);
+  for(let i = 0; i < document.styleSheets.length; i++){
+    try{
+      const rs = document.styleSheets[i].cssRules;
+      out.push('sheet' + i + '=' + rs.length);
+      const sels = [];
+      for(let j = 0; j < rs.length; j++){
+        if(rs[j].selectorText) sels.push(rs[j].selectorText);
+      }
+      out.push('HAS#stage:' + sels.indexOf('#stage'));
+      out.push('HAS#hud:' + sels.indexOf('#hud'));
+      out.push('HAS#puzzle-layer:' + sels.indexOf('#puzzle-layer'));
+      out.push('HAS.hidden:' + sels.indexOf('.hidden'));
+      out.push('last3:' + sels.slice(-3).join(' ; '));
+    }catch(e){ out.push('sheet' + i + 'ERR:' + e.message); }
+  }
+  const d = document.createElement('div');
+  d.id = 'cssprobe';
+  d.textContent = out.join(' || ');
+  document.body.appendChild(d);
+})();
+</script></body>
+</html>

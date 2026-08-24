@@ -3,16 +3,36 @@ function drawRoomBase(c){
   const P = pal();
   px(P.wall, 0, 26, W, 62);
   dither(P.wall2, 0, 26, W, 62);
+  for(let bx = 12; bx < W; bx += 48){
+    px(P.wood2, bx, 26, 3, 62);
+    px(P.woodDark, bx + 3, 26, 1, 62);
+  }
+  px(P.wood, 0, 34, W, 3);
+  px(P.woodDark, 0, 37, W, 1);
+  px(P.wood, 0, 80, W, 2);
+  px(P.woodDark, 0, 82, W, 6);
   px(P.floor, 0, 88, W, 58);
-  dither(P.floor2, 0, 88, W, 58);
+  for(let fy = 92; fy < 146; fy += 7){
+    px(P.floor2, 0, fy, W, 1);
+    const off = (fy / 7 | 0) % 2 ? 24 : 0;
+    for(let fx = off; fx < W; fx += 64){
+      px(P.woodDark, fx, fy - 6, 1, 6);
+    }
+  }
+  dither(P.woodDark, 0, 140, W, 6);
   px(P.woodDark, 0, 86, W, 3);
   px(P.shadow, 0, 26, W, 2);
   const gr = c.createLinearGradient(0, 0, 0, 146);
-  gr.addColorStop(0, 'rgba(0,0,0,0.35)');
-  gr.addColorStop(0.4, 'rgba(0,0,0,0)');
-  gr.addColorStop(1, 'rgba(0,0,0,0.3)');
+  gr.addColorStop(0, 'rgba(0,0,0,0.4)');
+  gr.addColorStop(0.35, 'rgba(0,0,0,0)');
+  gr.addColorStop(1, 'rgba(0,0,0,0.35)');
   c.fillStyle = gr;
   c.fillRect(0, 0, W, 146);
+}
+function contactShadow(c, x, y, w){
+  c.globalAlpha = 0.3;
+  dither(pal().shadow, x, y, w, 2);
+  c.globalAlpha = 1;
 }
 function drawRabbitHint(c, x, y, t){
   const bob = Math.sin(t * 2.2) > 0 ? 0 : 1;
@@ -71,13 +91,20 @@ ROOMS.ch1 = {
     }});
     s.push({ x:22, y:36, w:130, h:46, act:() => {
       if(!Engine.flag('p_byung')) pzOpen('byung');
-      else Engine.say('네 계절이 바르게 걸린 병풍이다.');
+      else {
+        openReader('병풍 뒤에 붙은 쪽지',
+          '토끼가 방아를 두드리는 소리 — 「달그락」.\n\n그 첫 어절, 한 글자를\n소리 조각 셋으로 쪼개\n서랍의 자물쇠에 넣어라.');
+        Engine.say('달그락… 첫 글자는 「달」이다.');
+      }
     }});
     s.push({ x:200, y:44, w:80, h:50, act:() => {
       if(!Engine.flag('p_lock')) pzOpen('lock');
       else Engine.say('서랍은 비어 있다.');
     }});
     s.push({ x:0, y:40, w:14, h:70, act:() => Engine.say('밖은 아직 캐지 않았다. 할 일부터 끝내자.') });
+    s.push({ x:256, y:30, w:56, h:44, act:() => Engine.say(G.yin
+      ? '창밖에 달이 없다. 이쪽 세계의 밤에는 달이 뜨지 않는다.'
+      : '가느다란 초승달. 그믐밤까지 며칠 남지 않았다.') });
     if(G.yin) s.push({ x:280, y:94, w:26, h:22, act:hintCh1 });
     if(Engine.flag('p_lock') && !Engine.flag('frag1'))
       s.push({ x:228, y:28, w:34, h:18, act:() => collectFragment(1) });
@@ -87,8 +114,8 @@ ROOMS.ch1 = {
 function hintCh1(){
   G.hints++; saveGame();
   Sfx.mortar();
-  if(!Engine.flag('p_byung')) Engine.say('토끼가 병풍 쪽을 본다. …계절의 순서일까.');
-  else if(!Engine.flag('p_lock')) Engine.say('토끼가 방아를 두드린다. 달-그-락. 세 글자.');
+  if(!Engine.flag('p_byung')) Engine.say('토끼가 병풍 쪽을 본다. …계절의 순서일까. 봄부터.');
+  else if(!Engine.flag('p_lock')) Engine.say('토끼가 방아를 두드린다. 달그락! …첫 글자 「달」 — ㄷ, ㅏ, ㄹ.');
   else Engine.say('토끼가 서랍 위를 본다.');
 }
 ROOMS.ch2 = {
@@ -177,9 +204,10 @@ ROOMS.ch2 = {
       } else openReader('할머니의 일기 · 상', ITEMS.diary1.text);
     }});
     if(G.yin){
-      s.push({ x:248, y:58, w:18, h:32, act:() => { G.hints++; saveGame(); Sfx.mortar(); hintCh2(); } });
-      s.push({ x:150, y:66, w:16, h:30, act:() => { G.hints++; saveGame(); Sfx.mortar(); hintCh2(); } });
-      s.push({ x:188, y:62, w:16, h:26, act:() => { G.hints++; saveGame(); Sfx.mortar(); hintCh2(); } });
+      s.push({ x:114, y:92, w:34, h:26, act:hintCh2 });
+      s.push({ x:248, y:58, w:18, h:32, act:() => Engine.say('아이의 그림자가 창문을 향해 손을 뻗는다.') });
+      s.push({ x:150, y:66, w:16, h:30, act:() => Engine.say('아이의 그림자가 인형을 바라본다. 오랫동안.') });
+      s.push({ x:188, y:62, w:16, h:26, act:() => Engine.say('아이의 그림자가 촛대를 가리킨다.') });
     }
     if(Engine.flag('p_candle') && Engine.flag('p_doll') && !Engine.flag('frag2'))
       s.push({ x:260, y:28, w:30, h:16, act:() => collectFragment(2) });
@@ -227,10 +255,8 @@ ROOMS.ch3 = {
     }
     px(P.wood, 236, 84, 30, 4);
     px(P.woodDark, 238, 88, 3, 10); px(P.woodDark, 260, 88, 3, 10);
-    if(!Engine.flag('read_recipe')){
-      px(P.paper, 240, 76, 22, 8);
-      px(P.paper2, 240, 76, 22, 1);
-    }
+    px(Engine.flag('read_recipe') ? P.paper2 : P.paper, 240, 76, 22, 8);
+    px(P.paper2, 240, 76, 22, 1);
     for(let i = 0; i < 6; i++){
       px(P.accent, 92 + (i % 3) * 8, 28 + Math.floor(i / 3) * 9 + Math.sin(t * 1.5 + i) * 1.5, 4, 5);
       px(P.wood2, 94 + (i % 3) * 8, 26 + Math.floor(i / 3) * 9, 1, 4);
@@ -246,12 +272,14 @@ ROOMS.ch3 = {
   spots(){
     const s = [];
     s.push({ x:232, y:70, w:36, h:24, act:() => {
+      const txt = '제사 예법.\n\n· 신위는 먼 줄 가운데\n· 어동서육 — 생선은 동쪽(오른), 고기는 서쪽(왼)\n· 좌포우혜 — 포는 맨 왼쪽, 혜는 맨 오른쪽\n· 홍동백서 — 붉은 과일은 오른, 흰 과일은 왼\n· 꼬치는 홀수 줄 대추, 짝수 줄 곶감';
       if(!Engine.flag('read_recipe')){
         Engine.setFlag('read_recipe', true);
-        openReader('낡은 요리책', '제사 예법.\n\n· 신위는 먼 줄 가운데\n· 어동서육 — 생선은 동쪽(오른), 고기는 서쪽(왼)\n· 좌포우혜 — 포는 맨 왼쪽, 혜는 맨 오른쪽\n· 홍동백서 — 붉은 과일은 오른, 흰 과일은 왼\n· 꼬치는 홀수 줄 대추, 짝수 줄 곶감');
+        openReader('낡은 요리책', txt);
         Engine.say('할머니가 매년 지키던 규칙이다.');
-      } else openReader('낡은 요리책', '제사 예법.\n\n· 신위는 먼 줄 가운데\n· 어동서육 — 생선은 동쪽(오른), 고기는 서쪽(왼)\n· 좌포우혜 — 포는 맨 왼쪽, 혜는 맨 오른쪽\n· 홍동백서 — 붉은 과일은 오른, 흰 과일은 왼\n· 꼬치는 홀수 줄 대추, 짝수 줄 곶감');
+      } else openReader('낡은 요리책', txt);
     }});
+    s.push({ x:16, y:52, w:56, h:60, act:() => Engine.say('아궁이가 아직 차갑다. 제를 올릴 때쯤이면 불이 붙을 것이다.') });
     s.push({ x:244, y:26, w:60, h:40, act:() => {
       if(!Engine.flag('p_skewer')) pzOpen('skewer');
       else Engine.say('꼬치가 예법대로 꿰어져 있다.');

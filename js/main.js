@@ -13,9 +13,10 @@ function onPuzzleSolved(pid){
 function collectFragment(n){
   Engine.setFlag('frag' + n, true);
   G.fragments = Math.max(G.fragments, n);
+  if(n < 6) G.chapter = n + 1;
+  saveGame();
   Sfx.fragment();
   drawMoonUI();
-  saveGame();
   toast('그믐조각 ' + n + ' 을(를) 얻었다');
   Engine.fadeOut(() => {
     if(n < 6) chapterCard(n + 1);
@@ -144,12 +145,17 @@ function bindUI(){
     Sfx.ensure(); Sfx.click();
     wipeSave();
     Sfx.startAmbient();
+    if(titleTimer) clearInterval(titleTimer);
     showIntro();
   });
   document.getElementById('btn-continue').addEventListener('click', () => {
     Sfx.ensure(); Sfx.click();
     loadGame();
+    for(let k = 5; k >= 1; k--){
+      if(G.flags['frag' + k]){ G.chapter = Math.max(G.chapter, k + 1); break; }
+    }
     Sfx.startAmbient();
+    if(titleTimer) clearInterval(titleTimer);
     document.getElementById('screen-title').classList.add('hidden');
     drawMoonUI();
     Engine.go('ch' + Math.min(G.chapter, 6));
@@ -201,14 +207,24 @@ function bindUI(){
     document.getElementById('reader').classList.add('hidden');
   });
 }
+let titleTimer = null;
 function boot(){
   Engine.init();
   bindUI();
+  if('serviceWorker' in navigator && location.protocol !== 'file:'){
+    navigator.serviceWorker.register('./sw.js').catch(function(){});
+  }
   const has = loadGame();
-  const progressed = has && (G.chapter > 1 || G.inv.length > 0 || Object.keys(G.flags).length > 0);
+  const progressed = has && (G.chapter > 1 || G.inv.length > 0 || Object.keys(G.flags).length > 1);
   if(progressed) document.getElementById('btn-continue').classList.remove('hidden');
+  const owned = ['a','b','c'].filter(k => G.endings && G.endings[k]);
+  if(owned.length){
+    const names = { a:'A 건너가는 자', b:'B 머무는 자', c:'C 토끼' };
+    document.getElementById('ending-note').textContent =
+      '도달한 결말 — ' + owned.map(k => names[k]).join(' · ');
+  }
   drawMoonUI();
-  const tcv = setInterval(() => {
+  titleTimer = setInterval(() => {
     if(!document.getElementById('screen-title').classList.contains('hidden')) drawTitle();
   }, 500);
   drawTitle();

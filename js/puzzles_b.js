@@ -17,6 +17,7 @@ PZ_DEFS.doll = {
     const row2 = document.createElement('div');
     row2.className = 'row';
     const labels = [];
+    let done = false;
     for(let i = 0; i < 5; i++){
       const cell = document.createElement('div');
       cell.className = 'cell';
@@ -47,11 +48,14 @@ PZ_DEFS.doll = {
       G.yin = saveYin;
       for(let i = 0; i < 5; i++) labels[i].textContent = bandNames[G.flags.dollState[i]];
       const d = G.flags.dollState;
-      if(d[0]===0 && d[1]===1 && d[2]===2 && d[3]===3 && d[4]===4){
+      if(d[0]===0 && d[1]===1 && d[2]===2 && d[3]===3 && d[4]===4 && !done){
+        done = true;
         Engine.setFlag('dollState', d);
         setTimeout(() => {
           pzSolved('doll', '인형이 온전한 오방색을 띤다');
         }, 350);
+      } else {
+        Engine.setFlag('dollState', d);
       }
     }
     refresh();
@@ -69,6 +73,7 @@ PZ_DEFS.candle = {
     const row = document.createElement('div');
     row.className = 'row';
     const cells = [];
+    let done = false;
     for(let i = 0; i < 5; i++){
       const cell = document.createElement('div');
       cell.className = 'cell';
@@ -79,6 +84,7 @@ PZ_DEFS.candle = {
       cell.appendChild(cv2);
       cell.addEventListener('click', () => {
         Sfx.click();
+        if(done) return;
         G.flags.candleState[i] = G.flags.candleState[i] ? 0 : 1;
         refresh();
       });
@@ -99,8 +105,11 @@ PZ_DEFS.candle = {
         G.yin = saveYin;
       });
       const a = G.flags.candleState;
-      if(a.join('') === answer.join('')){
-        setTimeout(() => pzSolved('candle', '촛불이 기억을 비춘다'), 300);
+      if(a.join('') === answer.join('') && !done){
+        done = true;
+        setTimeout(() => {
+          if(G.flags.candleState.join('') === answer.join('')) pzSolved('candle', '촛불이 기억을 비춘다');
+        }, 300);
       }
     }
     refresh();
@@ -123,44 +132,60 @@ PZ_DEFS.skewer = {
       r.className = 'row';
       const num = document.createElement('span');
       num.textContent = (i+1) + ' ';
-      num.style.color = '#5c7a9a';
+      num.style.color = '#8a6c34';
       r.appendChild(num);
-      const cells = [];
-      for(let j = 0; j < 3; j++){
-        const cell = document.createElement('div');
-        cell.className = 'cell';
-        cell.style.width = '48px';
-        cell.style.height = '30px';
-        cell.addEventListener('click', () => {
-          Sfx.click();
-          const st = G.flags.skewerState;
-          st[i][j] = st[i][j] === 'e' ? 'g' : (st[i][j] === 'g' ? 'j' : 'e');
-          Engine.setFlag('skewerState', st);
-          refresh();
-        });
-        r.appendChild(cell);
-        cells.push(cell);
-      }
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.style.width = '64px';
+      cell.style.height = '34px';
+      const cv2 = document.createElement('canvas');
+      cv2.width = 32; cv2.height = 16;
+      cv2.style.width = '56px';
+      cv2.style.imageRendering = 'pixelated';
+      cell.appendChild(cv2);
+      cell.addEventListener('click', () => {
+        Sfx.click();
+        const st = G.flags.skewerState;
+        st[i] = st[i].map(v => v === 'e' ? 'g' : (v === 'g' ? 'j' : 'e'));
+        Engine.setFlag('skewerState', st);
+        refresh();
+      });
+      r.appendChild(cell);
       wrap.appendChild(r);
-      rows.push(cells);
+      rows.push(cv2);
     }
     panel.appendChild(wrap);
     const acts = document.createElement('div');
     acts.className = 'actions';
     acts.appendChild(pzBtn(panel, '나간다', pzClose));
     panel.appendChild(acts);
+    function drawSkewer(cc, arr){
+      cc.clearRect(0, 0, 32, 16);
+      cc.fillStyle = '#6a5636';
+      cc.fillRect(15, 1, 2, 14);
+      arr.forEach((v, j) => {
+        if(v === 'e') return;
+        cc.fillStyle = v === 'g' ? '#b8681a' : '#5a2418';
+        cc.fillRect(9, 2 + j * 5, 14, 4);
+        cc.fillStyle = v === 'g' ? '#d88a2a' : '#7a3422';
+        cc.fillRect(10, 3 + j * 5, 12, 1);
+      });
+    }
     function refresh(){
       let ok = true;
       for(let i = 0; i < 5; i++){
         const want = (i % 2 === 0) ? 'j' : 'g';
+        drawSkewer(rows[i].getContext('2d'), G.flags.skewerState[i]);
         for(let j = 0; j < 3; j++){
-          const v = G.flags.skewerState[i][j];
-          rows[i][j].textContent = names[v];
-          if(v !== want) ok = false;
+          if(G.flags.skewerState[i][j] !== want) ok = false;
         }
       }
-      if(ok) setTimeout(() => pzSolved('skewer', '제상에 올릴 꼬치가 완성됐다'), 300);
+      if(ok && !skewerDone){
+        skewerDone = true;
+        setTimeout(() => pzSolved('skewer', '제상에 올릴 꼬치가 완성됐다'), 300);
+      }
     }
+    let skewerDone = false;
     refresh();
   }
 };

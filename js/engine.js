@@ -1,6 +1,6 @@
 'use strict';
 const G = {
-  chapter: 1, yin: false, inv: [], flags: {}, fragments: 0, hints: 0,
+  chapter: 1, yin: false, inv: [], flags: { yinCandlePattern:[1,0,1,1,0] }, fragments: 0, hints: 0,
   started: false, seenIntro: false, endings: {}, stoneSeed: 7,
   cursor: null, msgFull: '', msgShown: 0, msgT: 0
 };
@@ -28,14 +28,16 @@ function loadGame(){
 function wipeSave(){
   try{ localStorage.removeItem(SAVE_KEY); }catch(e){}
   Object.assign(G, {
-    chapter:1, yin:false, inv:[], flags:{}, fragments:0, hints:0,
+    chapter:1, yin:false, inv:[], flags:{ yinCandlePattern:[1,0,1,1,0] }, fragments:0, hints:0,
     started:false, seenIntro:false, endings:{}, stoneSeed:7, cursor:null
   });
 }
 const ITEMS = {
   bell:{ name:'제방 — 누르면 음과 양이 바뀐다' },
-  diary1:{ name:'할머니의 일기 · 상', readable:true, text:'' },
-  diary2:{ name:'할머니의 일기 · 하', readable:true, text:'' }
+  diary1:{ name:'할머니의 일기 · 상', readable:true, text:
+    '달력 20년 8월.\n\n그 아이는 여름에 물에 빠졌다.\n달골은 아이를 보내지 않았다.\n내가 붙잡았다. 우물의 달이\n아이를 여기 묶어 두었다.\n\n미안하다. 미안하다.' },
+  diary2:{ name:'할머니의 일기 · 하', readable:true, text:
+    '달력 20년 9월.\n\n달지기는 아이를 지키는 자가 아니었다.\n아이가 저승으로 건너가는 마지막 길을\n밝히는 자였다.\n\n나는 겁이 났다. 그믐밤이 올 때마다\n제를 지었지만, 조각을 물에 띄우지 못했다.\n이제 나의 시간도 다한다.\n지호야, 사당의 봉인을 열어라.\n너의 이름을 확인하고, 그믐밤에 달집에 나라.' }
 };
 const Engine = {
   cv:null, ctx:null, scale:1, room:null, hotspots:[], sparkleT:0,
@@ -51,12 +53,11 @@ const Engine = {
     requestAnimationFrame(t => this.loop(t));
   },
   fit(){
-    const pad = 0;
-    const s = Math.max(1, Math.min(
-      Math.floor((window.innerWidth - pad) / W),
-      Math.floor((window.innerHeight - pad) / H)
-    ));
+    let s = Math.min(window.innerWidth / W, window.innerHeight / H);
+    if(s >= 2) s = Math.floor(s);
+    s = Math.max(s, 1);
     this.scale = s;
+    document.documentElement.style.setProperty('--s', s);
     const st = document.getElementById('stage');
     st.style.width = (W * s) + 'px';
     st.style.height = (H * s) + 'px';
@@ -90,11 +91,23 @@ const Engine = {
     }
   },
   setHotspots(list){ this.hotspots = list; this.sparkleT = 2.6; },
+  initAmbient(){
+    this.dust = [];
+    for(let i = 0; i < 26; i++){
+      this.dust.push({
+        x: Math.random() * W, y: 30 + Math.random() * 100,
+        vx: (Math.random() - 0.5) * 3, vy: -2 - Math.random() * 4,
+        ph: Math.random() * 7
+      });
+    }
+  },
   go(roomId){
     this.room = roomId;
     const r = ROOMS[roomId];
     document.getElementById('chapname').textContent = r.title;
+    this.initAmbient();
     r.onEnter && r.onEnter();
+    if(G.yin && r.onYin) r.onYin();
     this.fadeIn();
   },
   say(text){
@@ -115,6 +128,7 @@ const Engine = {
   fadeOut(cb){ this.fadeDir = 1; this.fadeCb = cb; },
   fadeIn(){ this.fadeDir = -1; },
   toggleYin(){
+    if(this.fadeDir !== 0) return;
     if(!G.has('bell')){ toast('무언가 소리를 내는 도구가 필요하다'); return; }
     this.fadeOut(() => {
       G.yin = !G.yin;
@@ -153,20 +167,42 @@ const Engine = {
   },
   render(){
     const c = this.ctx;
-    c.fillStyle = pal().bg;
+    const P = pal();
+    c.fillStyle = P.bg;
     c.fillRect(0, 0, W, H);
     ROOMS[this.room].draw(c, this.T);
+    if(this.dust && this.dust.length){
+      for(let i = 0; i < this.dust.length; i++){
+        const d = this.dust[i];
+        d.x += d.vx * 0.016; d.y += d.vy * 0.016;
+        if(d.y < 26){ d.y = 130; d.x = Math.random() * W; }
+        if(d.x < 0) d.x = W; if(d.x > W) d.x = 0;
+        const tw = 0.10 + 0.12 * (0.5 + 0.5 * Math.sin(this.T * 2 + d.ph));
+        c.globalAlpha = tw;
+        c.fillStyle = G.yin ? '#7ae0d0' : '#e8d8a0';
+        c.fillRect(d.x | 0, d.y | 0, 1, 1);
+      }
+      c.globalAlpha = 1;
+    }
+    if(!this._vig){
+      const v = c.createRadialGradient(W/2, H/2 - 10, 70, W/2, H/2, 210);
+      v.addColorStop(0, 'rgba(0,0,0,0)');
+      v.addColorStop(1, 'rgba(0,0,0,0.42)');
+      this._vig = v;
+    }
+    c.fillStyle = this._vig;
+    c.fillRect(0, 0, W, H);
     if(this.sparkleT > 0){
       this.sparkleT -= 0.016;
       const a = Math.min(1, this.sparkleT);
-      c.globalAlpha = a * 0.8;
+      c.globalAlpha = a * 0.85;
       this.hotspots.forEach(h => {
         if(h.yin !== undefined && h.yin !== G.yin) return;
         if(h.when && !h.when()) return;
         if(h.hidden) return;
         const x = h.x + h.w/2, y = h.y + h.h/2;
         const s2 = 1 + Math.sin(this.T * 6) * 0.5;
-        c.fillStyle = pal().glow;
+        c.fillStyle = P.glow;
         c.fillRect(x-1, y-3, 2, 2); c.fillRect(x-1, y+1, 2, 2);
         c.fillRect(x-3, y-1, 2, 2); c.fillRect(x+1, y-1, 2, 2);
       });
@@ -174,7 +210,14 @@ const Engine = {
     }
     if(this.fade > 0){
       c.fillStyle = '#02040a';
-      c.globalAlpha = this.fade;
+      const f = this.fade;
+      for(let gy = 0; gy < 23; gy++){
+        for(let gx = 0; gx < 40; gx++){
+          const h2 = ((gx * 7 + gy * 13) % 23) / 23;
+          if(h2 < f * 1.15) c.fillRect(gx * 8, gy * 8, 8, 8);
+        }
+      }
+      c.globalAlpha = Math.max(0, f * 1.6 - 0.6) * 0.9;
       c.fillRect(0, 0, W, H);
       c.globalAlpha = 1;
     }

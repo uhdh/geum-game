@@ -44,10 +44,9 @@ PZ_DEFS.byung = {
   build(panel){
     pzDesc(panel, '계절의 순서가 어긋나 있다. 두 폭을 눌러 자리를 바꿔라.');
     if(!G.flags.byungOrder) G.flags.byungOrder = [2,0,3,1];
-    const names = ['봄', '여름', '가을', '겨울'];
     const row = document.createElement('div');
     row.className = 'row';
-    let sel = -1;
+    let sel = -1, done = false;
     const cells = [];
     for(let i = 0; i < 4; i++){
       const cell = document.createElement('div');
@@ -55,10 +54,9 @@ PZ_DEFS.byung = {
       const cv2 = document.createElement('canvas');
       cv2.width = 26; cv2.height = 36;
       cell.appendChild(cv2);
-      const nm = document.createElement('small');
-      cell.appendChild(nm);
       cell.addEventListener('click', () => {
         Sfx.click();
+        if(done) return;
         if(sel === -1){ sel = i; cell.classList.add('sel'); }
         else if(sel === i){ sel = -1; cell.classList.remove('sel'); }
         else {
@@ -69,28 +67,28 @@ PZ_DEFS.byung = {
         }
       });
       row.appendChild(cell);
-      cells.push({cv2, nm, cell});
+      cells.push(cv2);
     }
     panel.appendChild(row);
     function refresh(){
-      cells.forEach((c2, i) => {
+      cells.forEach((cv2, i) => {
         const k = G.flags.byungOrder[i];
-        const cc = c2.cv2.getContext('2d');
+        const cc = cv2.getContext('2d');
         const saveYin = G.yin;
         G.yin = false;
         drawSeason(cc, k, 0, 0, 26, 36);
         G.yin = saveYin;
-        c2.nm.textContent = names[k];
-        c2.cell.classList.remove('sel');
       });
+      panel.querySelectorAll('.cell').forEach(c2 => c2.classList.remove('sel'));
       const o = G.flags.byungOrder;
-      if(o[0]===0 && o[1]===1 && o[2]===2 && o[3]===3){
+      if(o[0]===0 && o[1]===1 && o[2]===2 && o[3]===3 && !done){
+        done = true;
         Engine.setFlag('byungOrder', o);
         setTimeout(() => {
           pzSolved('byung');
           openReader('병풍 뒤에 붙은 쪽지',
-            '토끼가 방아를 두드리는 소리,\n그 세 글자가 서랍을 연다.');
-        }, 350);
+            '토끼가 방아를 두드리는 소리 — 「달그락」.\n\n그 첫 어절, 한 글자를\n소리 조각 셋으로 쪼개\n서랍의 자물쇠에 넣어라.');
+        }, 400);
       } else {
         Engine.setFlag('byungOrder', o);
       }
@@ -103,13 +101,14 @@ PZ_DEFS.lock = {
   build(panel){
     const locked = !Engine.flag('p_byung');
     pzDesc(panel, locked
-      ? '세 개의 홈이 비어 있다. 단서를 찾지 못했다.'
-      : '세 개의 홈에 낱글자를 넣어라.');
+      ? '세 개의 홈이 비어 있다. 어디선가 세 글자의 단서를 찾아야 한다.'
+      : '「달그락」 — 방아 소리의 첫 어절, 그 한 글자를 위 홈부터 쪼개 넣어라.');
     const sets = [
       ['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ'],
       ['ㅏ','ㅓ','ㅗ','ㅜ','ㅣ','ㅡ','ㅐ'],
       ['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ']
     ];
+    const labels = ['처음 홀소리', '가운데 홀소리', '끝 홀소리'];
     if(!G.flags.lockState) G.flags.lockState = [0,0,0];
     const row = document.createElement('div');
     row.className = 'row';
@@ -121,6 +120,9 @@ PZ_DEFS.lock = {
       const span = document.createElement('span');
       span.style.fontSize = '20px';
       cell.appendChild(span);
+      const nm = document.createElement('small');
+      nm.textContent = labels[i];
+      cell.appendChild(nm);
       cell.addEventListener('click', () => {
         Sfx.click();
         G.flags.lockState[i] = (G.flags.lockState[i] + 1) % sets[i].length;

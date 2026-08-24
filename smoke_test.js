@@ -5,6 +5,8 @@ function makeCtx(){
   return new Proxy({}, {
     get(t, p){
       if(p === 'createLinearGradient') return () => ({ addColorStop(){} });
+      if(p === 'createRadialGradient') return () => ({ addColorStop(){} });
+      if(p === 'createPattern') return () => ({});
       if(p === 'measureText') return () => ({ width: 10 });
       if(typeof p === 'string') return t[p] !== undefined ? t[p] : (() => {});
       return () => {};
@@ -14,7 +16,7 @@ function makeCtx(){
 }
 function makeEl(tag){
   const el = {
-    tag, children: [], style: {}, dataset: {}, _cls: new Set(),
+    tag, children: [], style: { setProperty(){} }, dataset: {}, _cls: new Set(),
     classList: {
       add(c){ el._cls.add(c); },
       remove(c){ el._cls.delete(c); },
@@ -40,6 +42,7 @@ function makeEl(tag){
 }
 const els = {};
 const documentStub = {
+  documentElement: makeEl('html'),
   getElementById(id){ if(!els[id]) els[id] = makeEl('div'); return els[id]; },
   createElement(tag){ return makeEl(tag); },
   addEventListener(){},

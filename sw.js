@@ -1,4 +1,4 @@
-const CACHE = 'geum-v1';
+const CACHE = 'geum-v3';
 const ASSETS = [
   './',
   './index.html',

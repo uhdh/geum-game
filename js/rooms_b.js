@@ -43,10 +43,9 @@ ROOMS.ch4 = {
     drawCandle(c, 292, 60, true, t + 2);
     px(P.paper, 276, 62, 4, 26);
     px(P.paper, 288, 62, 4, 26);
-    if(!Engine.flag('read_genealogy')){
-      px(P.paper, 130, 100, 24, 10);
-      px(P.paper2, 130, 100, 24, 1);
-    }
+    px(P.paper, 130, 100, 24, 10);
+    px(Engine.flag('read_genealogy') ? P.paper2 : P.paper, 130, 100, 24, 10);
+    px(P.paper2, 130, 100, 24, 1);
     if(G.yin) drawRabbitHint(c, 286, 96, t);
     if(Engine.flag('p_tablets') && Engine.flag('p_ohaeng') && !Engine.flag('frag4')){
       const a = 0.6 + 0.4 * Math.sin(t * 5);
@@ -116,6 +115,14 @@ ROOMS.ch5 = {
     dither(P.stone, 0, 110, W, 36);
     c.drawImage(bake('well'), 130, 58, 54, 48);
     px(P.glow, 148, 96, 24, 3);
+    const seen = G.flags.stoneSeen || [];
+    for(let k = 0; k < 5; k++){
+      if(k < seen.length){
+        px(k < 3 ? P.paper : P.glow, 138 + k * 8, 50, 4, 4);
+      } else {
+        px(P.woodDark, 138 + k * 8, 50, 4, 4);
+      }
+    }
     STONE_YANG.concat(STONE_YIN).forEach(i => {
       const sx = 40 + i * 50, sy = 100 + (i % 2) * 8;
       const glow = STONE_YANG.includes(i) ? !G.yin : G.yin;
@@ -133,22 +140,25 @@ ROOMS.ch5 = {
   },
   spots(){
     const s = [];
-    s.push({ x:224, y:78, w:34, h:26, act:() => {
+    for(let i = 0; i < 5; i++){
+      const sx = 40 + i * 50, sy = 100 + (i % 2) * 8;
+      s.push({ x:sx - 4, y:sy - 4, w:16, h:15, act:() => tapStone(i) });
+    }
+    s.push({ x:224, y:76, w:36, h:20, act:() => {
       if(!Engine.flag('p_rhythm')) pzOpen('rhythm');
       else Engine.say('토끼는 방아를 다 쳤다.');
     }});
+    s.push({ x:130, y:56, w:56, h:50, act:() => Engine.say(G.yin
+      ? '우물 속 달이 탁하다. 이쪽에서는 빛이 두 개뿐이다.'
+      : '우물 속 달이 선명하다. 이쪽에서는 빛이 셋이다.') });
     s.push({ x:284, y:66, w:26, h:32, act:() => {
       if(!Engine.flag('read_stone_clue')){
         Engine.setFlag('read_stone_clue', true);
-        openReader('우물가의 비석', '「두 세계의 빛을 울려라.\n이승의 빛 셋을 먼저,\n저승의 빛 둘을 그다음에.\n순서가 어긋나면 달은 다시 잠든다」');
+        openReader('우물가의 비석', '「두 세계의 빛을 울려라.\n이승의 빛 셋을 먼저,\n저승의 빛 둘을 그다음에.\n같은 돌을 두 번 울릴 수 없고,\n순서가 어긋나면 달은 다시 잠든다」');
         Engine.say('제방으로 이승과 저승을 오가며 빛나는 돌을 찾아라.');
-      } else Engine.say('「이승의 빛 셋, 저승의 빛 둘」');
+      } else Engine.say('「이승의 빛 셋, 저승의 빛 둘 — 두 번 울림 없이」');
     }});
-    for(let i = 0; i < 5; i++){
-      const sx = 40 + i * 50, sy = 100 + (i % 2) * 8;
-      s.push({ x:sx, y:sy, w:8, h:7, act:() => tapStone(i) });
-    }
-    s.push({ x:0, y:120, w:30, h:26, act:() => Engine.say('마당으로 돌아갈 시간이다. (조각을 모으면 길이 열린다)') });
+    s.push({ x:0, y:120, w:30, h:26, act:() => Engine.say('조각을 모으면 저절로 다음 길이 열린다.') });
     if(Engine.flag('p_rhythm') && Engine.flag('p_stones') && !Engine.flag('frag5'))
       s.push({ x:144, y:44, w:32, h:18, act:() => collectFragment(5) });
     return s;
@@ -156,43 +166,34 @@ ROOMS.ch5 = {
 };
 function tapStone(i){
   if(Engine.flag('p_stones')){ Engine.say('돌은 이미 조용하다.'); return; }
-  let prog = G.flags.stoneProg || 0;
-  const yangFirst = prog < 3;
-  if(yangFirst){
-    if(STONE_YANG.includes(i)){
-      prog++;
-      G.flags.stoneProg = prog;
-      Sfx.tone(420 + prog * 90, .3, 'sine', .12);
-      if(prog === 3) Engine.say('이승의 빛 셋이 울렸다. 이제 저승의 빛을 울려라.');
-      saveGame();
-    } else {
-      G.flags.stoneProg = 0;
-      Sfx.fail();
-      Engine.say('달이 다시 잠든다. 이승의 빛부터 다시.');
+  let seen = G.flags.stoneSeen || [];
+  if(seen.includes(i)){ toast('이미 울린 돌이다'); return; }
+  const yangPhase = seen.length < 3;
+  const isYang = STONE_YANG.includes(i);
+  if(yangPhase === isYang){
+    seen = seen.concat([i]);
+    G.flags.stoneSeen = seen;
+    Sfx.tone(420 + seen.length * 90, .3, 'sine', .12);
+    if(seen.length === 3) Engine.say('이승의 빛 셋이 울렸다. 이제 저승의 빛을 울려라.');
+    if(seen.length >= 5){
+      Engine.setFlag('p_stones', true);
+      Engine.say('다섯 빛이 우물 속 달을 비춘다.');
     }
+    saveGame();
   } else {
-    if(STONE_YIN.includes(i)){
-      prog++;
-      G.flags.stoneProg = prog;
-      Sfx.tone(420 + prog * 90, .3, 'sine', .12);
-      if(prog >= 5){
-        Engine.setFlag('p_stones', true);
-        Engine.say('다섯 빛이 우물 속 달을 비춘다.');
-      }
-      saveGame();
-      Engine.setHotspots(ROOMS.ch5.spots());
-    } else {
-      G.flags.stoneProg = 0;
-      Sfx.fail();
-      Engine.say('달이 다시 잠든다. 이승의 빛부터 다시.');
-    }
+    G.flags.stoneSeen = [];
+    Sfx.fail();
+    Engine.say(yangPhase
+      ? '달이 다시 잠든다. 이승의 빛 셋부터 다시.'
+      : '달이 다시 잠든다. 남은 저승의 빛부터 다시.');
   }
+  Engine.setHotspots(ROOMS.ch5.spots());
 }
 ROOMS.ch6 = {
   title: '제6장 · 달집 — 그믐밤',
   onEnter(){
-    Engine.say('달집 앞이다. 소나무 틀에 다섯 개의 조각 홈이 비어 있다.');
-    Engine.say('달토끼가 방아를 멈추고 이쪽을 본다.');
+    Engine.say('달집 앞이다. 소나무 틀에 다섯 개의 조각 홈이 비어 있고, 달토끼가 방아를 멈추고 이쪽을 본다.');
+    setTimeout(() => Engine.say('…이제 보내줘도 되는 걸까.'), 2600);
     Engine.setHotspots(this.spots());
   },
   onYin(){ Engine.setHotspots(this.spots()); },
