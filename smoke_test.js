@@ -65,7 +65,7 @@ sandbox.window.AudioContext = undefined;
 sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 
-const files = ['palette','sprites_a','sprites_b','audio','engine','puzzles_a','puzzles_b','puzzles_c','puzzles_d','rooms_a','rooms_b','main'];
+const files = ['palette','sprites_a','sprites_b','audio','engine','puzzles_a','puzzles_b','puzzles_c','puzzles_d','puzzles_e','rooms_a','rooms_b','main'];
 for(const f of files){
   const code = fs.readFileSync('js/' + f + '.js', 'utf8');
   try{
@@ -83,8 +83,8 @@ function run(name, fn){
 }
 
 run('boot', () => vm.runInContext('boot()', sandbox));
-run('intro+ch1', () => {
-  vm.runInContext('wipeSave(); Sfx.startAmbient(); chapterCard(1)', sandbox);
+run('intro+madang', () => {
+  vm.runInContext('wipeSave(); Sfx.startAmbient(); Engine.go("madang"); Engine.T = 1; Engine.render()', sandbox);
 });
 run('draw ch1 yang', () => {
   vm.runInContext('Engine.go("ch1"); Engine.T = 1; Engine.render()', sandbox);
@@ -93,10 +93,16 @@ run('draw ch1 yin', () => {
   vm.runInContext('G.yin = true; bakeCacheClear(); Engine.render(); ROOMS.ch1.spots()', sandbox);
 });
 run('ch1 puzzles', () => {
-  vm.runInContext('G.yin = false; bakeCacheClear(); pzOpen("byung"); pzClose(); pzOpen("lock"); pzClose()', sandbox);
+  vm.runInContext('G.yin = false; bakeCacheClear(); pzOpen("clock"); pzClose(); pzOpen("lock"); pzClose()', sandbox);
+});
+run('combination system', () => {
+  vm.runInContext('Engine.give("flint"); Engine.give("cotton"); G.cursor = "flint"; renderInv(); Engine.take("flint"); Engine.take("cotton"); Engine.give("tinder"); if(!Engine.has("tinder")) throw new Error("tinder missing")', sandbox);
+});
+run('hintFor all rooms', () => {
+  vm.runInContext('["madang","ch1","ch2","ch3","ch4","ch5","ch6"].forEach(r => { const h = hintFor(r); if(!h) throw new Error("no hint for " + r) })', sandbox);
 });
 run('solve ch1 + fragment', () => {
-  vm.runInContext('Engine.setFlag("p_byung", true); Engine.setFlag("p_lock", true); onPuzzleSolved("byung"); onPuzzleSolved("lock"); collectFragment(1)', sandbox);
+  vm.runInContext('Engine.setFlag("p_clock", true); Engine.setFlag("p_lock", true); onPuzzleSolved("clock"); onPuzzleSolved("lock"); collectFragment(1)', sandbox);
 });
 for(const n of [2,3,4,5]){
   run('ch' + n + ' draw+spots both states', () => {
@@ -106,7 +112,7 @@ for(const n of [2,3,4,5]){
   });
 }
 run('all puzzles open', () => {
-  const list = ['byung','lock','doll','candle','skewer','jesa','tablets','ohaeng','rhythm','ritual'];
+  const list = ['clock','lock','doll','candle','fire','jesa','scale','ohaeng','rhythm','ritual'];
   vm.runInContext('const L=' + JSON.stringify(list) + '; L.forEach(p=>{pzOpen(p); pzClose();})', sandbox);
 });
 run('stones puzzle', () => {

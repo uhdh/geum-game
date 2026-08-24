@@ -139,7 +139,31 @@ const SPRITES = {
     '44444444',
     '.444444.',
     '..4..4..'
-  ], map:{ '4':'paper2', 'a':'accent', 'b':'ink' } }
+  ], map:{ '4':'paper2', 'a':'accent', 'b':'ink' } },
+  flint: { rows:[
+    '..44....',
+    '.4444.4.',
+    '4444444.',
+    '.44444..',
+    '..444...',
+    '...44...'
+  ], map:{ '4':'metal2' } },
+  cotton: { rows:[
+    '...55...',
+    '..5555..',
+    '.555555.',
+    '.555555.',
+    '..5555..',
+    '...55...'
+  ], map:{ '5':'white' } },
+  tinder: { rows:[
+    '...ff...',
+    '..fFFf..',
+    '.fFFFFf.',
+    '..FFFF..',
+    '...44...',
+    '..444...'
+  ], map:{ 'f':'flame2', 'F':'flame', '4':'woodDark' } }
 };
 const bakeCache = {};
 function bake(key, yinOverride){
@@ -168,7 +192,7 @@ function dspr(key, x, y){
   ctx.drawImage(bake(key), x|0, y|0);
 }
 function itemIcon(id, size){
-  const map = { bell:'bell', diary1:'diary', diary2:'diary' };
+  const map = { bell:'bell', diary1:'diary', diary2:'diary', flint:'flint', cotton:'cotton', tinder:'tinder' };
   const cv2 = document.createElement('canvas');
   cv2.width = 24; cv2.height = 24;
   const c2 = cv2.getContext('2d');

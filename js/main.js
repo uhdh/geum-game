@@ -8,32 +8,36 @@ function onPuzzleSolved(pid){
     Engine.give('bell');
     Engine.say('서랍에서 작은 제방이 나왔다. 흔들면 — 세계가 뒤집힌다.');
   }
+  if(pid === 'clock'){
+    openReader('시계 뒤에 붙은 쪽지',
+      '토끼가 방아를 두드리는 소리 — 「달그락」.\n\n그 첫 어절, 한 글자를\n소리 조각 셋으로 쪼개\n서랍의 자물쇠에 넣어라.');
+  }
   if(ROOMS[Engine.room]) Engine.setHotspots(ROOMS[Engine.room].spots());
+}
+function fragCount(){
+  return ['frag1','frag2','frag3','frag4','frag5'].filter(f => G.flags[f]).length;
 }
 function collectFragment(n){
   Engine.setFlag('frag' + n, true);
-  G.fragments = Math.max(G.fragments, n);
-  if(n < 6) G.chapter = n + 1;
-  saveGame();
-  Sfx.fragment();
+  G.fragments = fragCount();
   drawMoonUI();
-  toast('그믐조각 ' + n + ' 을(를) 얻었다');
-  Engine.fadeOut(() => {
-    if(n < 6) chapterCard(n + 1);
-  });
+  Sfx.fragment();
+  toast('그믐조각 ' + n + ' 을(를) 얻었다 (' + G.fragments + '/5)');
+  saveGame();
+  if(ROOMS[Engine.room]) Engine.setHotspots(ROOMS[Engine.room].spots());
+  if(G.fragments >= 5){
+    setTimeout(() => Engine.say('조각 다섯 개... 이제 달집으로 가자.'), 800);
+  } else {
+    setTimeout(() => Engine.say('마당으로 돌아가 다른 방을 둘러보자.'), 800);
+  }
 }
-function chapterCard(n){
+function showRoomCard(title){
   const sc = document.getElementById('screen-card');
-  document.getElementById('card-ch').textContent = '제 ' + n + ' 장';
-  document.getElementById('card-title').textContent = CH_TITLES[n];
+  document.getElementById('card-ch').textContent = '—';
+  document.getElementById('card-title').textContent = title;
   sc.classList.remove('hidden');
   Sfx.page();
-  setTimeout(() => {
-    sc.classList.add('hidden');
-    G.chapter = n;
-    Engine.go('ch' + n);
-    saveGame();
-  }, 2400);
+  setTimeout(() => sc.classList.add('hidden'), 1700);
 }
 function drawMoonUI(){
   drawMoonPhase(null, document.getElementById('mooncv'), G.fragments);
@@ -43,7 +47,7 @@ const INTRO = [
   '할머니는 이 마을의 마지막\n「달지기」였다.',
   '장례를 마치고 유언장을 받아 든 나는,\n20년 만에 고향 집으로 돌아왔다.',
   '「사당을 정리하고, 그믐밤까지\n달집을 차려라.\n우물의 달이 지기 전에.」',
-  '그날 밤부터 —\n방들은 두 개의 얼굴을 보여 주기 시작했다.'
+  '마당에는 여섯 개의 문이 있다.\n어느 곳부터 살펴봐도 좋다.\n\n— 단, 모든 조각을 모아야\n달집의 문이 열린다.'
 ];
 let introIdx = 0;
 function showIntro(){
@@ -57,7 +61,76 @@ function showIntroPage(){
   document.getElementById('intro-text').textContent = INTRO[introIdx];
   Sfx.page();
   document.getElementById('btn-intro-next').textContent =
-    introIdx === INTRO.length - 1 ? '사랑채로' : '다음';
+    introIdx === INTRO.length - 1 ? '마당으로' : '다음';
+}
+function hintFor(room){
+  const F = k => Engine.flag(k);
+  if(room === 'madang'){
+    if(G.fragments >= 5) return '달집으로. 조각을 박고, 토끼의 리듬을 기억해라.';
+    const done = [];
+    if(F('frag1')) done.push('사랑채');
+    if(F('frag2')) done.push('안채');
+    if(F('frag3')) done.push('부엌');
+    if(F('frag4')) done.push('사당');
+    if(F('frag5')) done.push('우물');
+    return '아직 손대지 않은 방이 있다: ' +
+      ['사랑채','안채','부엌','사당','우물'].filter(n => done.indexOf(n) < 0).join(', ') +
+      '. 어디부터 가도 좋다.';
+  }
+  if(room === 'ch1'){
+    if(!F('read_will')) return '유언장대의 유언장부터 읽어라. 단서는 늘 종이에서 시작된다.';
+    if(!F('p_clock')) return '벽시계 바늘을 맞춰라. 유언장이 말하는 시각 — 저녁 8시 30분.';
+    if(!F('p_lock')) return '시계 뒤 쪽지를 읽었나? 「달그락」의 첫 글자 「달」 — ㄷ·ㅏ·ㄹ.';
+    return '이방은 끝났다. 마당으로.';
+  }
+  if(room === 'ch2'){
+    if(!F('read_crayon')) return '벽의 낙서 — 청·백·적·황·흑. 인형의 순서다.';
+    if(!F('p_doll')) return '인형의 다섯 띠를 낙서 순서로 물들여라.';
+    if(!F('saw_yin_candles')) return '제방을 흔들어 저승의 촛불을 확인해라.';
+    if(!F('p_candle')) return '이승의 촛불을 저승에서 보던 그대로 — 1·3·4번째.';
+    return '이방은 끝났다. 부엌 문은 마당 반대쪽에 있다.';
+  }
+  if(room === 'ch3'){
+    if(!G.inv.includes('tinder')) return '부싯돈(사랑채)과 솜(안채)을 주워 인벤토리에서 조합해 불씨를 만들어라.';
+    if(!F('p_fire')) return '아궁이에 불씨를 옮기고, 불꽃이 초록빛일 때 부솥질해라.';
+    if(!F('p_jesa')) return '요리책의 예법대로 제상을 차려라. 신위는 먼 줄 가운데.';
+    return '이방은 끝났다. 사당 문은 마당 뒤편에 있다.';
+  }
+  if(room === 'ch4'){
+    if(!F('read_genealogy')) return '바닥의 족보 — 저울의 단서가 적혀 있다.';
+    if(!F('p_scale')) return '저울: 넷 이상 올리고 좌우 무게가 같게. 곶감3·대추2·밤4·유과1·산자5.';
+    if(!F('read_diary2') && !Engine.has('diary2')) return '봉인칸이 열렸다면 — 먼저 열어보라.';
+    if(!F('p_ohaeng')) return '오행 벽장치: 목→화→토→금→수→목으로 이어라.';
+    return '이방은 끝났다. 우물은 마당 오른쪽이다.';
+  }
+  if(room === 'ch5'){
+    if(!F('read_stone_clue')) return '우물가 비석 — 이승의 빛 셋, 저승의 빛 둘.';
+    if(!F('p_rhythm')) return '토끼의 리듬을 따라 쳐라. 쉬는 칸은 치지 않는다.';
+    if(!F('p_stones')) return '제방으로 오가며 빛나는 돌을 확인 — 이승 셋 먼저, 저승 둘을 다음에.';
+    return '이방은 끝났다.';
+  }
+  if(room === 'ch6'){
+    return '다섯 조각을 달 틀에 박아라. 그다음은 달이 물을 것이다.';
+  }
+  return '마당에서 시작해라.';
+}
+function useMenuHint(){
+  if(G.hints === 0){
+    showModal('힌트를 볼까요?',
+      '힌트를 한 번이라도 사용하면<br><b>숨겨진 결말</b>을 볼 수 없게 됩니다.',
+      [
+        { label:'취소', cls:'btn-sub', fn:null },
+        { label:'힌트 보기', cls:'btn-primary', fn:function(){
+            G.hints++;
+            saveGame();
+            openReader('달토끼의 힌트', hintFor(Engine.room));
+          } }
+      ]);
+  } else {
+    G.hints++;
+    saveGame();
+    openReader('달토끼의 힌트', hintFor(Engine.room));
+  }
 }
 function showEnding(id){
   pzClose();
@@ -98,7 +171,6 @@ function showEnding(id){
     c2.fillStyle = '#e8d8a0';
     c2.fillRect(150, 100, 6, 8);
   } else {
-    c2.drawImage(bake('rabbit', true), 140, 60, 40, 40, 0, 0, 0, 0);
     c2.fillStyle = '#a8c0d8';
     c2.fillRect(120, 60, 80, 70);
     c2.fillStyle = '#04060e';
@@ -151,14 +223,14 @@ function bindUI(){
   document.getElementById('btn-continue').addEventListener('click', () => {
     Sfx.ensure(); Sfx.click();
     loadGame();
-    for(let k = 5; k >= 1; k--){
-      if(G.flags['frag' + k]){ G.chapter = Math.max(G.chapter, k + 1); break; }
-    }
+    const map = {1:'ch1',2:'ch2',3:'ch3',4:'ch4',5:'ch5',6:'ch6'};
+    const startRoom = G.room || map[G.chapter] || 'madang';
+    if(!ROOMS[startRoom]) G.room = 'madang'; else G.room = startRoom;
     Sfx.startAmbient();
     if(titleTimer) clearInterval(titleTimer);
     document.getElementById('screen-title').classList.add('hidden');
     drawMoonUI();
-    Engine.go('ch' + Math.min(G.chapter, 6));
+    Engine.go(G.room);
   });
   document.getElementById('btn-intro-next').addEventListener('click', () => {
     Sfx.click();
@@ -169,7 +241,7 @@ function bindUI(){
       document.getElementById('screen-intro').classList.add('hidden');
       G.seenIntro = true;
       drawMoonUI();
-      chapterCard(1);
+      Engine.go('madang');
     }
   });
   document.getElementById('btn-end-title').addEventListener('click', () => {
@@ -187,6 +259,11 @@ function bindUI(){
     Sfx.click();
     document.getElementById('menu-overlay').classList.add('hidden');
   });
+  document.getElementById('btn-hint').addEventListener('click', () => {
+    Sfx.click();
+    document.getElementById('menu-overlay').classList.add('hidden');
+    useMenuHint();
+  });
   document.getElementById('btn-sound').addEventListener('click', () => {
     const on = Sfx.toggle();
     document.getElementById('btn-sound').textContent = '소리: ' + (on ? '켬' : '끔');
@@ -194,7 +271,7 @@ function bindUI(){
   });
   document.getElementById('btn-help').addEventListener('click', () => {
     document.getElementById('menu-overlay').classList.add('hidden');
-    openReader('조작법', '· 화면을 눌러 조사한다\n· 아래 물건을 눌러 읽거나 확인한다\n· 제방을 누르면 이승(양)과 저승(음)이 뒤집힌다\n· 막히면 저승의 달토끼를 눌러 힌트를 듣는다\n· 힌트를 한 번도 쓰지 않으면 숨겨진 길이 열린다');
+    openReader('조작법', '· 화면을 눌러 조사한다\n· 마당의 여섯 문은 언제든 자유롭게 오갈 수 있다\n· 인벤토리의 물건을 누르면 읽거나, 조합할 수 있다\n· 제방을 누르면 이승(양)과 저승(음)이 뒤집힌다\n· 막히면 메뉴의 힌트나 저승의 달토끼를 눌러라\n· 힌트를 한 번도 쓰지 않으면 숨겨진 결말이 열린다');
   });
   document.getElementById('btn-reset').addEventListener('click', () => {
     if(confirm('처음부터 다시 시작할까요? 저장이 지워집니다.')){
@@ -206,6 +283,10 @@ function bindUI(){
     Sfx.click();
     document.getElementById('reader').classList.add('hidden');
   });
+}
+function updateSoundBtn(){
+  const b = document.getElementById('btn-sound');
+  if(b) b.textContent = '소리: ' + (Sfx.on ? '켬' : '끔');
 }
 let titleTimer = null;
 function boot(){

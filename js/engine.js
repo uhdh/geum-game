@@ -8,6 +8,7 @@ const SAVE_KEY = 'geum_save_v1';
 function saveGame(){
   try{
     localStorage.setItem(SAVE_KEY, JSON.stringify({
+      room:(typeof Engine !== 'undefined' && Engine.room) || null,
       chapter:G.chapter, yin:G.yin, inv:G.inv, flags:G.flags, fragments:G.fragments,
       hints:G.hints, seenIntro:G.seenIntro, endings:G.endings, stoneSeed:G.stoneSeed, sound:Sfx.on
     }));
@@ -37,7 +38,14 @@ const ITEMS = {
   diary1:{ name:'할머니의 일기 · 상', readable:true, text:
     '달력 20년 8월.\n\n그 아이는 여름에 물에 빠졌다.\n달골은 아이를 보내지 않았다.\n내가 붙잡았다. 우물의 달이\n아이를 여기 묶어 두었다.\n\n미안하다. 미안하다.' },
   diary2:{ name:'할머니의 일기 · 하', readable:true, text:
-    '달력 20년 9월.\n\n달지기는 아이를 지키는 자가 아니었다.\n아이가 저승으로 건너가는 마지막 길을\n밝히는 자였다.\n\n나는 겁이 났다. 그믐밤이 올 때마다\n제를 지었지만, 조각을 물에 띄우지 못했다.\n이제 나의 시간도 다한다.\n지호야, 사당의 봉인을 열어라.\n너의 이름을 확인하고, 그믐밤에 달집에 나라.' }
+    '달력 20년 9월.\n\n달지기는 아이를 지키는 자가 아니었다.\n아이가 저승으로 건너가는 마지막 길을\n밝히는 자였다.\n\n나는 겁이 났다. 그믐밤이 올 때마다\n제를 지었지만, 조각을 물에 띄우지 못했다.\n이제 나의 시간도 다한다.\n지호야, 사당의 봉인을 열어라.\n너의 이름을 확인하고, 그믐밤에 달집에 나라.' },
+  flint:{ name:'부싯돈 — 조합할 물건을 누른 뒤 다른 물건을 눌러라' },
+  cotton:{ name:'솜뭉치 — 조합할 물건을 누른 뒤 다른 물건을 눌러라' },
+  tinder:{ name:'불씨 — 아궁이에 옮길 수 있다' }
+};
+const RECIPES = {
+  'flint+cotton':'tinder',
+  'cotton+flint':'tinder'
 };
 const Engine = {
   cv:null, ctx:null, scale:1, room:null, hotspots:[], sparkleT:0,
@@ -108,6 +116,10 @@ const Engine = {
     this.initAmbient();
     r.onEnter && r.onEnter();
     if(G.yin && r.onYin) r.onYin();
+    if(!Engine.flag('seen_' + roomId)){
+      Engine.setFlag('seen_' + roomId, true);
+      if(typeof showRoomCard === 'function') showRoomCard(r.title);
+    }
     this.fadeIn();
   },
   say(text){
@@ -119,8 +131,13 @@ const Engine = {
     if(!G.inv.includes(id)) G.inv.push(id);
     Sfx.pickup();
     renderInv();
-    toast(ITEMS[id].name + ' 을(를) 얻었다');
+    toast(ITEMS[id].name.split(' — ')[0] + ' 을(를) 얻었다');
     saveGame();
+  },
+  take(id){
+    G.inv = G.inv.filter(x => x !== id);
+    if(G.cursor === id) G.cursor = null;
+    renderInv();
   },
   has(id){ return G.inv.includes(id); },
   setFlag(k, v){ G.flags[k] = v; saveGame(); },
@@ -244,6 +261,31 @@ function renderInv(){
       const it = ITEMS[id];
       if(id === 'bell'){
         Engine.toggleYin();
+        return;
+      }
+      if(G.cursor && G.cursor !== id){
+        const result = RECIPES[G.cursor + '+' + id] || RECIPES[id + '+' + G.cursor];
+        const used = G.cursor;
+        G.cursor = null;
+        if(result){
+          Engine.take(used);
+          Engine.take(id);
+          Engine.give(result);
+          toast('조합: ' + ITEMS[used].name.split(' — ')[0] + ' + ' + ITEMS[id].name.split(' — ')[0] + ' = ' + ITEMS[result].name.split(' — ')[0]);
+        } else {
+          toast('함께 쓸 수 없는 조합이다');
+          renderInv();
+        }
+        return;
+      }
+      if(G.cursor === id){
+        G.cursor = null;
+        renderInv();
+        return;
+      }
+      if(id === 'flint' || id === 'cotton' || id === 'tinder'){
+        G.cursor = id;
+        renderInv();
         return;
       }
       if(it.readable){ openReader(it.name, it.text); return; }

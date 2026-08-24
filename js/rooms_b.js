@@ -158,7 +158,7 @@ ROOMS.ch5 = {
         Engine.say('제방으로 이승과 저승을 오가며 빛나는 돌을 찾아라.');
       } else Engine.say('「이승의 빛 셋, 저승의 빛 둘 — 두 번 울림 없이」');
     }});
-    s.push({ x:0, y:120, w:30, h:26, act:() => Engine.say('조각을 모으면 저절로 다음 길이 열린다.') });
+    s.push({ x:0, y:120, w:30, h:26, act:() => Engine.go('madang') });
     if(Engine.flag('p_rhythm') && Engine.flag('p_stones') && !Engine.flag('frag5'))
       s.push({ x:144, y:44, w:32, h:18, act:() => collectFragment(5) });
     return s;
